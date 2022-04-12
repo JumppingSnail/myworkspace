@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>医院管理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+        .upload-file-btn{
+            margin-top: 3px;
+        }
+        .show-img{
+            top: 8px;
+            position: absolute;
+            margin-left: 10px;
+            color: #027F87;
+        }
+        .layui-form-item{
+		    margin: 8px 0;
+		}
+    </style>
+</head>
+<body>
+<div class="layui-form layui-edit-form" id="edit-div">
+    <input type="hidden" id="id" name="id"/>
+
+    <div class="layui-row">
+
+        <div class="layui-col-sm4">
+            <label class="layui-form-label"><span class="layui-badge-required"></span>医院名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="orgName" id="orgName" lay-verify="required" lay-reqtext="医院名称不能为空" class="layui-input" />
+            </div>
+        </div>
+
+        <div class="layui-col-sm4">
+            <label class="layui-form-label">医院简称</label>
+            <div class="layui-input-block">
+                <input type="text" name="orgSimpleName" id="orgSimpleName" class="layui-input" />
+            </div>
+        </div>
+
+        <div class="layui-col-sm4">
+            <label class="layui-form-label">联系电话</label>
+            <div class="layui-input-block">
+                <input type="text" name="orgPhone" id="orgPhone" class="layui-input" />
+            </div>
+        </div>
+
+        <div class="layui-col-sm4">
+            <label class="layui-form-label">医院地址</label>
+            <div class="layui-input-block">
+                <input type="text" name="orgAddress" id="orgAddress" class="layui-input" />
+            </div>
+        </div>
+
+    </div>
+
+	<div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">医院说明</label>
+        <div class="layui-input-block">
+            <textarea name="remark" id="remark" class="layui-textarea" maxlength="500"></textarea>
+        </div>
+    </div>
+
+    <div class="layui-row layui-submit-box">
+        <div class="layui-input-block layui-submit-button">
+            <button type="submit" class="layui-btn" lay-submit="" lay-filter="saveBtn">保存</button>
+        </div>
+    </div>
+
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/moment.min.js"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+	layui.use(['form', 'laydate'], function () {
+		var form = layui.form;
+		var layer = layui.layer;
+		var $ = layui.$;
+		var laydate = layui.laydate;
+
+		var editData = global_getLocalStorage("hospital-edit#mapObject") || '';
+		global_removeLocalStorage("hospital-edit#mapObject");
+        if (editData){
+            $("#id").val(editData.id)
+            $("#orgName").val(editData.org_name)
+            $("#orgSimpleName").val(editData.org_simple_name)
+            $("#orgAddress").val(editData.org_address)
+            $("#orgPhone").val(editData.org_phone)
+		    $("#remark").val(editData.remark)
+            form.render();
+        }
+
+		
+		//监听提交
+		form.on('submit(saveBtn)', function (data) {
+			$.ajax({
+				url : getRealUrl("/org/saveOrg.do"),
+				type : "POST",
+				contentType : "application/json; charset=utf-8",
+				data : JSON.stringify(data.field),
+				success : function(data) {
+					if(data.result === 'ok'){
+						var iframeIndex = parent.layer.getFrameIndex(window.name);
+						parent.layer.close(iframeIndex);
+                        parent.layui.table.reload('currentTableId');
+                        parent.alert_msg('操作成功！');
+
+					}else{
+						alert_msg('操作未成功，请稍后重试或联系管理员！', 7, 0);
+					}
+				}
+			});
+
+			return false;
+		});
+
+	});
+</script>
+</body>
+</html>

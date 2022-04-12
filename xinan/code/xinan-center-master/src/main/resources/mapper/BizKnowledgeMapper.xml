@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.metamedical.mapper.BizKnowledgeMapper">
+	<select id="reposList" resultType="java.util.HashMap">
+		  SELECT bk.id, bk.repos_title, bkc.cat_name, bk.create_user_name, bk.create_user_id, bk.repos_state, bk.create_time,
+				bk.update_time, bk.commend_flag, bk.repos_url
+				
+			FROM biz_knowledge bk 
+			  JOIN base_knowledge_catagory bkc ON bk.cat_id=bkc.id
+			  
+			WHERE 1=1
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(reposTitle)">
+			  AND bk.repos_title LIKE #{reposTitle}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(catId)">
+			  AND bk.cat_id=#{catId}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(reposState)">
+			  AND bk.repos_state=#{reposState}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(createUserId)">
+			  AND bk.create_user_id=#{createUserId}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(catName)">
+				AND bkc.cat_name = #{catName}
+			</if>
+
+			
+			
+			ORDER BY bk.update_time desc
+	</select>
+	
+	<select id="fullSearchList" resultType="java.util.HashMap">
+		SELECT bk.id, cat.cat_name, bk.repos_title, bk.publish_date, bk.repos_author, bk.repos_digest, bk.create_time
+		
+		  FROM biz_knowledge bk 
+			JOIN base_knowledge_catagory cat ON bk.cat_id=cat.id
+			LEFT JOIN (
+				SELECT DISTINCT bkc.repos_id
+				  FROM biz_knowledge_content bkc 
+				WHERE 1=1
+				
+				<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchContent)">
+					AND (bkc.section_name LIKE #{searchContent} OR bkc.section_content LIKE #{searchContent})
+				</if>
+				
+			) tmp ON tmp.repos_id=bk.id
+			
+		 WHERE bk.repos_state='1'
+		   AND cat.cat_state='1'
+		 
+		 	<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(catId)">
+			  AND bk.cat_id=#{catId}
+			</if>
+			
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(searchContent)">
+			  AND (bk.repos_title LIKE #{searchContent} OR bk.repos_author LIKE #{searchContent} OR bk.repos_digest LIKE #{searchContent})
+			</if>
+			
+		 ORDER BY bk.create_time DESC 
+	</select>
+	
+	<select id="myCollectList" resultType="java.util.HashMap">
+		SELECT bkc.id, cat.cat_name, bkc.repos_id, bk.repos_title, bk.repos_author, bk.repos_digest 
+		
+		  FROM biz_knowledge_collect bkc 
+			JOIN biz_knowledge bk ON bkc.repos_id=bk.id 
+			JOIN base_knowledge_catagory cat ON cat.id=bk.cat_id 
+			
+		 WHERE bkc.collect_user_id=#{userId}
+		   AND bk.repos_state='1'
+		   AND cat.cat_state='1'
+		   
+		 ORDER BY bkc.collect_time DESC 
+	</select>
+	
+	<select id="myFeedbackList" resultType="java.util.HashMap">
+		SELECT bf.id, bf.repos_id, bf.section_id, cat.cat_name, bk.repos_title, bkc.section_name, bf.select_content, 
+				bf.feedback_content, bf.feedback_time, bf.deal_content, bf.deal_time, bf.deal_user_id, bf.deal_user_name, bf.deal_state 
+
+		  FROM biz_feedback bf 
+			JOIN biz_knowledge bk ON bk.id=bf.repos_id 
+			JOIN base_knowledge_catagory cat ON cat.id=bk.cat_id 
+			LEFT JOIN biz_knowledge_content bkc ON bkc.id=bf.section_id 
+			
+		  WHERE bf.feedback_user_id=#{userId}
+			AND bk.repos_state='1'
+			AND cat.cat_state='1'
+			
+		  ORDER BY bf.deal_state DESC,  bf.deal_time DESC , bf.feedback_time DESC 
+	</select>
+	
+	<select id="portalKnowledgeList" resultType="java.util.HashMap">
+		SELECT bk.*, bkc.cat_name 
+		
+		  FROM biz_knowledge bk 
+			JOIN base_knowledge_catagory bkc ON bk.cat_id=bkc.id 
+			
+		  WHERE bk.repos_state='1'
+		    AND bkc.cat_state='1'
+		    
+		  	<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(commendFlag)">
+				AND bk.commend_flag=#{commendFlag}
+			</if>
+			
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(catId)">
+				AND bk.cat_id=#{catId}
+			</if>
+			
+		  ORDER BY ${orderBy} DESC
+	</select>
+	
+	<select id="knowledgeWithKeywordList" resultType="java.util.HashMap">
+	   SELECT tmp.id, tmp.cat_name, tmp.repos_title, tmp.repos_author, tmp.repos_digest, tmp.create_time, t_k.keyword_name
+		FROM (
+		        SELECT bk.id, bkc.cat_name, bk.repos_title, bk.repos_author, bk.repos_digest, bk.create_time
+		          FROM biz_knowledge bk 
+		            JOIN base_knowledge_catagory bkc ON bk.cat_id=bkc.id 
+		          WHERE bk.repos_state='1'
+		            AND bkc.cat_state='1'
+		            
+		            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(catId)">
+		                AND bk.cat_id=#{catId}
+		            </if>
+		          
+		        UNION ALL 
+		        
+		        SELECT bmc.id, '医案' AS cat_name, (bmc.patient_name || '|' || CASE WHEN bmc.patient_sex='0' THEN '男' WHEN bmc.patient_sex='1' THEN '女' ELSE '未知' END || '|' || bmc.patient_age::CHARACTER || '岁') AS repos_title,
+		               '' AS repos_author, '中医诊断：' || bmc.case_description AS repos_digest, bmc.create_time 
+		          FROM biz_medical_case bmc 
+		          
+		        <!-- 由于此处病案与栏目没有关联关系，因此此处catId不传或者传1则认为是医案，否则不允许查出 -->
+		        <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(catId) and catId!='1'.toString()">
+		          WHERE 1=0
+		        </if>
+		) tmp
+		
+		JOIN (
+			SELECT rel.source_id, string_agg(bk.keyword_name ||'' , '；') keyword_name
+			  FROM  biz_keyword_rel rel 
+			     JOIN biz_keyword bk ON rel.keyword_id=bk.id 
+			     
+			 WHERE rel.keyword_id IN (select keyword_id from biz_keyword_rel where source_id=#{subjectId})
+			 
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(keywordIds)">
+			   AND rel.keyword_id IN (${keywordIds})
+			</if>
+			
+			GROUP BY rel.source_id 
+		) t_k ON tmp.id=t_k.source_id 
+        
+		ORDER BY tmp.create_time DESC 
+	</select>
+</mapper>

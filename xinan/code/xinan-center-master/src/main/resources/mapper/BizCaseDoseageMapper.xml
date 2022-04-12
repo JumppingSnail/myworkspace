@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.metamedical.mapper.BizCaseDoseageMapper">
+
+    <select id="selectListByTreatmentId" resultType="java.util.HashMap">
+        select
+
+            concat_ws('',bk.repos_title, bcd.drug_usage) as drug
+
+        from biz_case_doseage bcd
+        left join biz_knowledge bk on bk.id = bcd.drug_id
+
+        where doseage_id = #{trId}
+        order by bcd.drug_sort
+    </select>
+
+</mapper>

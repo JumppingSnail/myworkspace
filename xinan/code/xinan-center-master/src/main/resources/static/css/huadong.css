@@ -1,0 +1,45 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+#SlidingVerification{
+    width: 300px;
+    height: 40px;
+    background-color: #eee;
+    margin: 50px auto;
+    position: relative;
+}
+.sv-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 40px;
+    width: 100%;
+    text-align: center;
+    line-height: 40px;
+    font-size: 14px;
+    color: #333;
+    z-index: 1;
+}
+
+.sv-btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    background-color: #fff;
+    cursor: pointer;
+    z-index: 2;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: url("../image/icon_qianjin.png") center;
+}
+
+.sv-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: #7ac23c
+}

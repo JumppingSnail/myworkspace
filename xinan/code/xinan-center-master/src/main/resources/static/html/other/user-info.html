@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>tree-table</title>
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <link rel="stylesheet" href="../../css/user-info.css" media="all">
+    <style>
+
+    </style>
+
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <div class="layui-card">
+            <div class="layui-card-header">个人信息维护</div>
+            <div class="layui-card-body">
+                <form class="layui-form" action="">
+                    <input type="hidden" id="id" name="id" />
+                    <div class="layui-form-item">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label">登录账户</label>
+                            <div class="layui-input-inline">
+                                <input type="text" readonly="readonly" name="userCode" id="userCode" class="layui-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label">用户姓名</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="userRealName" id="userRealname" class="layui-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label">用户类型</label>
+                            <div class="layui-input-inline">
+                                <input type="text" readonly="readonly" name="userTypeName" id="userTypeName" class="layui-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label">所属机构</label>
+                            <div class="layui-input-inline">
+                                <input type="text" readonly="readonly" name="orgName" id="orgName" class="layui-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label">所属角色</label>
+                            <div class="layui-input-inline">
+                                <input type="text" readonly="readonly" name="allRoles" id="allRoles" class="layui-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"></label>
+                            <div class="layui-form-item" style="margin-top: 30px;">
+                                <span class="save-pswd-btn">修改密码</span>
+                                <button class="layui-btn" style="margin-top: 0;" lay-submit lay-filter="data-save-btn">确认保存</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+    layui.use('form', function() {
+        var form = layui.form;
+
+        $.getJSON(getRealUrl("/sys/fetchCurrentUserInfo.do"), function(res) {
+            var data = res.data;
+            $('#id').val(data.userId);
+            $('#userCode').val(data.userCode);
+            $('#userRealname').val(data.realName);
+
+            var userType = data.userType;
+            if (userType == '0') {
+                $('#userTypeName').val('超级管理员');
+
+            } else if (userType == '1') {
+                $('#userTypeName').val('管理员');
+
+            } else if (userType == '2') {
+                $('#userTypeName').val('研究员');
+
+            } else if (userType == '3') {
+                $('#userTypeName').val('医生');
+
+            } else if (userType == '4') {
+                $('#userTypeName').val('其他');
+
+            } else {
+                $('#userTypeName').val('其他');
+            }
+
+            $('#orgName').val(data.orgName);
+
+            var roleStr = '';
+            for (var i = 0; i < data.roles.length; i++) {
+                roleStr += data.roles[i].roleName + '; ';
+            }
+            if (roleStr && roleStr.length > 0) {
+                $('#allRoles').val(roleStr.substring(0, roleStr.length - 2));
+            }
+
+        });
+
+        //保存修改
+        form.on('submit(data-save-btn)', function(data) {
+            $.ajax({
+                url: getRealUrl("/sys/saveCurrentUser.do"),
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(data.field),
+                success: function(data) {
+                    if (data.result == '310') {
+                        alert_msg('用户账号重复！', 2, 0);
+
+                    } else {
+                        if (data.result == 'ok') {
+                            alert_msg('保存成功！');
+                        } else {
+                            alert_msg('服务器内部错误！', 2, 0);
+                        }
+                    }
+                }
+            });
+            return false;
+        });
+
+    });
+
+    //修改密码
+    $('.save-pswd-btn').click(function() {
+        var index = layer.open({
+            title: '修改密码',
+            type: 2,
+            shade: 0.2,
+            area: ['75%', '90%'],
+            content: 'user-save-pswd.html',
+            success: function(layer, index) {
+
+            },
+        });
+    })
+</script>
+</body>
+
+</html>

@@ -1,0 +1,125 @@
+html{
+    height: 100%;
+}
+body{
+    height: calc(100% - 40px);
+}
+.layuimini-container,.layuimini-main{
+    height: 100%;
+}
+.layuimini-main{
+    margin: 0;
+}
+.layui-card{
+    box-shadow: none;
+    border-radius: 5px;
+    height: 100%;
+}
+.layui-card-body{
+    height: calc(100% - 63px);
+    overflow-y: scroll;
+    padding: 10px 30px;
+}
+.layui-form-label {
+    padding: 0px 30px 0px 0px;
+    width: 95px;
+    color: #000;
+    font-size: 14px;
+}
+.save-pswd-btn{
+    width: 180px;
+    height: 50px;
+    background: #4266EE;
+    border-radius: 8px;
+    display: inline-block;
+    margin-right: 30px;
+    cursor: pointer;
+    color: #fff;
+    text-align: center;
+    line-height: 50px;
+    font-size: 16px;
+}
+.save-pswd-btn:hover{
+    opacity: 0.8;
+}
+.layui-input{
+    height: 46px;
+    width: 540px;
+    border-radius: 6px;
+    border: 1px solid #DCDDE0;
+    margin-top: 0;
+    font-size: 14px;
+}
+.layui-textarea{
+    border: 1px solid #DCDDE0;
+    border-radius: 6px;
+    font-size: 14px;
+    max-width: 1215px;
+}
+.layui-input[readonly="readonly"],.layui-textarea[readonly="readonly"]{
+    border: none;
+    background: #F3F4F7;
+    color: #AAAAAA;
+}
+.layui-input:focus,.layui-textarea:focus{
+    border: 1px solid #8CA4FF!important;
+}
+ .layui-input:hover,.layui-textarea:hover{
+     border: 1px solid #4266EE!important;
+ }
+.btn-box{
+    display: flex;
+}
+.layui-card-header{
+    font-size: 16px;
+    color: #000000;
+}
+.layui-col-sm6{
+    align-items: baseline;
+    width: auto!important;
+    float: none!important;
+    margin-top: 20px;
+    min-width: 680px;
+}
+.layui-col-sm12{
+    align-items: baseline;
+    margin-top: 20px;
+    min-width: 663px;
+}
+.layui-form-item .layui-input-inline,.layui-form-item .layui-input-block{
+    width: auto;
+}
+.layui-form-item{
+    flex-wrap: wrap;
+}
+.layui-btn{
+    padding: 0;
+    width: 180px;
+    height: 50px;
+    border-radius: 8px;
+    font-size: 16px;
+    background: #4266EE;
+}
+.layui-input[readonly="readonly"]:focus,.layui-input[readonly="readonly"]:hover{
+    border: none!important;
+}
+.layui-form-radio>i:hover{
+    color: #8CA4FF;
+}
+.layui-form-radioed>i {
+    color: #4266EE;
+}
+.layui-card-header{
+    color: #000;
+    border-color: #E6ECFC;
+    font-size: 16px;
+}
+.layui-card-header{
+    color: #000;
+    font-size: 16px;
+    padding: 0;
+    margin:0 15px;
+    font-weight: 600;
+    height: 54px;
+    line-height: 54px;
+}

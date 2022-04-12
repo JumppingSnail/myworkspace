@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>登录</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" />
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/huadong.css">
+    <link rel="stylesheet" href="css/dragverify.css" />
+    <link rel="icon" href="./image/title.ico">
+
+    <style>
+        #dragverify {
+            margin-top: 28px;
+            margin-bottom: 40px;
+            width: 380px;
+            height: 38px;
+            line-height: 38px;
+            background: #fff;
+            border: 1px solid rgba(87, 127, 235, 0.15);
+        }
+
+        #dragverify .dragverifytext {
+            width: 380px;
+        }
+
+        .title {
+            font-size: 23px;
+        }
+
+        .main {
+            background: url(./image/xinan/login-bg.png);
+            background-size: 100% 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <div class="content">
+            <div class="left-box">
+                <img src="./image/xinan/login-left.png" alt="">
+            </div>
+            <div class="right-box">
+                <form class="layui-form" action="">
+                    <p class="title">
+                        <p class="title">
+                            <img src="./image/xinan/login-title.png" alt="" style="height: 36px;">
+                        </p>
+                    </p>
+                    <p class="user">
+                        <input type="text" name="userCode" id="userCode" placeholder="请输入您的用户号" autocomplete="off" class="layui-input admin-input admin-input-username" value="buyer" lay-verify="required" lay-reqtext="用户名不能为空">
+                    </p>
+                    <p class="pswd">
+                        <input type="password" name="password" placeholder="请输入密码" autocomplete="off" class="layui-input admin-input" value="" lay-verify="required" lay-reqtext="密码不能为空">
+                    </p>
+
+                    <p class="login-btn">
+                        <span class="layui-btn admin-button" lay-submit="" lay-filter="login" id="login-btn">登录</span>
+                    </p>
+                    <p style="text-align: right;margin-top: 18px;">
+                    </p>
+
+                </form>
+            </div>
+        </div>
+        <div style="position: fixed;bottom: 25px;color: #fff; font-size: 14px;">
+            
+        </div>
+
+    </div>
+
+    <script src="lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+    <script src="js/app.js" charset="utf-8"></script>
+    <script src="lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+
+    <script>
+        layui.use(['form'], function() {
+            var form = layui.form;
+            var layer = layui.layer;
+            var $ = layui.$;
+
+            //$('#now-year').html(new Date().getFullYear());
+
+            var USERCODE_STORAGE = "xinan@login-index#usercode";
+            var lastUserCode = global_getLocalStorage(USERCODE_STORAGE) || '';
+            global_removeLocalStorage(USERCODE_STORAGE);
+
+            $('#userCode').val(lastUserCode);
+
+            // 登录过期的时候，跳出ifram框架
+            if (top.location != self.location) top.location = self.location;
+
+            // 进行登录操作
+            form.on('submit(login)', function(data) {
+                $.post(getRealUrl("/auth/login.do"), {
+                    userCode: data.field.userCode,
+                    password: data.field.password
+
+                }, function(response) {
+                	if (response.result == '301' || response.result == '302') {
+                    	alert_msg('用户名或密码不正确！', 2, 0);
+
+                    } else if (response.result == '304') {
+                    	alert_msg('密码重试次数过多，该用户被锁定30分钟！', 2, 0);
+
+                    } else if (response.result == '313') {
+                    	alert_msg('该用户已经被停用！', 2, 0);
+
+                    } else if (response.result == 'error') {
+                    	alert_msg('服务器内部错误！', 2, 0);
+
+                    } else {
+						global_cleanLocalStorage();
+
+                    	global_setLocalStorage(KEY_TOKEN, response.data);
+                        global_setLocalStorage(USERCODE_STORAGE, data.field.userCode);
+
+                        window.location = 'html/main.html';
+                    }
+                });
+                return false;
+            });
+
+            $(".layui-input").keydown(function(e) {
+                if (e.keyCode === 13) {
+                    $("#login-btn").trigger("click");
+                }
+            });
+
+        });
+    </script>
+</body>
+
+</html>

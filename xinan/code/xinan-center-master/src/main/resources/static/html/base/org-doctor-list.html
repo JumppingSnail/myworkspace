@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>医生列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+		<!-- 查询区域 -->
+        <fieldset class="table-search-fieldset">
+            <div >
+                <form class="layui-form" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">姓名</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="userNameSearch" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">手机号</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="userCodeSearch" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <button class="layui-btn" lay-submit lay-filter="data-search-btn">
+                                <img src="../../image/search.png" alt="">
+                            </button>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+		<!-- 查询区域 -->
+
+		<!-- 列表区域 -->
+		<div style="margin: 0 20px;">
+			<script type="text/html" id="toolbarDemo">
+                <div><span style="color:#bfbfbf">注：添加医院医生，可在账号管理处添加（账号类型选择：医生），在账号管理添加完成后，该账号可添加系统，且会同步到当前列表中。</span></div>
+        	</script>
+
+	        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+	
+			<script type="text/html" id="num_down">
+ 				{{d.LAY_TABLE_INDEX+1}}
+			</script>
+	        <script type="text/html" id="currentTableBar">
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">修改</a>
+        	</script>
+		</div>
+
+    </div>
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        var table = layui.table;
+
+        var currentUser = global_getLocalStorage("xinan#currentUser");
+		var userId = currentUser.userId;
+
+
+        var currentOrg = global_getLocalStorage("org-doctor-list#mapObject");
+        global_removeLocalStorage("org-doctor-list#mapObject");
+
+        var tableObj = table.render({
+            elem: '#currentTableId',
+            url: getRealUrl('/sys/userlist.do'),
+            toolbar: '#toolbarDemo',
+            method: 'get',
+            defaultToolbar: [],
+            even: true,
+            cols: [[
+                {field:'num', title: '序号', width:60, align: 'center',templet:'#num_down',fixed:'left'},
+                {field: 'user_code', width: 180, title: '手机号'},
+	            {field: 'user_real_name', title: '姓名'},
+	            {field: 'doctor_title', title: '医生职称'},
+	            {field: 'user_state', title: '状态', align: 'center',templet:function(d){
+	            	if(d.user_state=='1'){
+	            		return '使用中';
+	            	}else if(d.user_state=='0'){
+	            		return '停用';
+	            	}
+
+		            return "";
+	            }},
+                {field: 'org_name', title: '所属医院'},
+                {title: '操作', toolbar: '#currentTableBar', align: "center"}
+
+            ]],
+            limits: [20, 50, 100],
+            limit: 20,
+            page: true,
+            height: 'full-107',
+            where:{
+                orgIdSearch: currentOrg.id,
+                userTypeSearch: '3'
+            }
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            //执行搜索重载
+            table.reload('currentTableId', {
+                page: {
+                    curr: 1
+                },
+                where: {
+                	userCodeSearch : data.field.userCodeSearch,
+                	userNameSearch : data.field.userNameSearch,
+                	userStateSearch : data.field.userStateSearch,
+                }
+            });
+
+            return false;
+        });
+
+     	// toolbar监听事件
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'add') {  // 监听添加操作
+                var index = layer.open({
+                    title: '添加用户',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['75%', '90%'],
+                    content: 'user-edit.html',
+                });
+            }
+        });
+
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            
+            if (obj.event === 'edit') {
+	            global_setLocalStorage("org-user-list#userObject", data);
+	            var index = layer.open({
+                    title: '编辑医生信息',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['90%', '90%'],
+                    content: 'org-user-edit.html',
+                    success: function (layer, index) {
+
+                    },
+                });
+                return false;
+
+            }
+            
+        });
+
+    });
+</script>
+
+</body>
+</html>

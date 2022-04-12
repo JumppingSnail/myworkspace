@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>用户编辑</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layui-form layui-edit-form" id="edit-div">
+        <input type="hidden" id="id" name="id" />
+        
+        <div class="layui-row">
+            <div class="layui-col-sm4">
+                <label class="layui-form-label"><span class="layui-badge-required"></span>手机号</label>
+                <div class="layui-input-block">
+                    <input type="text" name="userCode" id="userCode" lay-reqtext="手机号不能为空" placeholder="请输入手机号" lay-verify="required" value="" class="layui-input" maxlength="50" />
+                </div>
+            </div>
+
+            <div class="layui-col-sm4">
+                <label class="layui-form-label"><span class="layui-badge-required"></span>姓名</label>
+                <div class="layui-input-block">
+                    <input type="text" name="userRealName" id="userRealName" class="layui-input" value="" maxlength="50" lay-reqtext="姓名不能为空" placeholder="请输入姓名" lay-verify="required"/>
+                </div>
+            </div>
+
+            <div class="layui-col-sm4">
+                <label class="layui-form-label">账号类型</label>
+                <div class="layui-form layui-input-block" lay-filter="user-type">
+                    <select name="userType" id="userType" class="layui-input">
+					<option value="1">管理员</option>
+			        <option value="2">研究员</option>
+			        <option value="3">医生</option>
+			        <option value="4">其他</option>
+				</select>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">备注</label>
+            <div class="layui-input-block">
+                <textarea name="remark" id="remark" class="layui-textarea" placeholder="附加说明" maxlength="300"></textarea>
+            </div>
+        </div>
+        
+        <div class="layui-form-item layui-form-text">
+        	<label class="layui-form-label"></label>
+            <div class="layui-input-block">
+        		<span style="color:#bfbfbf;">添加账号，可同时登录后台及前端页面。系统会根据角色自动加载账号权限。</span>
+        	</div>
+        </div>
+
+        <div class="layui-row">
+            <div class="layui-col-sm4">
+                <label class="layui-form-label"></label>
+                <div class="layui-input-block">
+                    <button type="submit" class="layui-btn" lay-submit="" lay-filter="saveBtn">保存</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+    <script src="../../js/app.js" charset="utf-8"></script>
+    <script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+    <script>
+        layui.use(['form'], function() {
+            var form = layui.form;
+            var layer = layui.layer;
+            var $ = layui.$;
+
+            // 从浏览器缓存中获取界面之间的传值，获取后删除
+            var userObj = global_getLocalStorage("user-list#userObject") || {};
+            global_removeLocalStorage("user-list#userObject");
+
+            var userId = userObj.id;
+            
+            if(userId){
+            	$('#id').val(userId);
+            	$('#userCode').val(userObj.user_code);
+            	$('#userRealName').val(userObj.user_real_name);
+            	$('#userType').val(userObj.user_type);
+            	$('#remark').val(userObj.remark);
+            	
+            	form.render();
+            }
+
+            //监听提交
+            var isLoading = false
+            form.on('submit(saveBtn)', function(data) {
+            	let userCode = $('#userCode').val();
+            	let re = /[1][0-9]+/;
+            	if(!userCode || !re.test(userCode) || userCode.length!=11){
+            		alert_msg('手机号输入有误，要求11位有效手机号码！', 2, 0);
+            		return false;
+            	}
+            	
+            	if(!isLoading){
+		            isLoading = true
+                    
+                    $.ajax({
+                        url: getRealUrl("/sys/saveUser.do"),
+                        type: "POST",
+                        contentType: "application/json; charset=utf-8",
+                        data: JSON.stringify(data.field),
+                        success: function(data) {
+                            isLoading = false
+                            if (data.result == 'ok') {
+                                var iframeIndex = parent.layer.getFrameIndex(window.name);
+                                parent.layer.close(iframeIndex);
+                                parent.layui.table.reload('currentTableId');
+                                parent.alert_msg('操作成功！');
+                                
+                            } else if(data.result == '310') {
+                            	alert_msg('该账户已经被注册，请更换手机号！', 2, 0);
+
+                            } else {
+                                alert_msg('服务器内部错误！', 2, 0);
+                            }
+
+                        },
+                        error: function () {
+                            isLoading = false
+                        }
+                    });
+                }
+            });
+
+        });
+    </script>
+</body>
+
+</html>

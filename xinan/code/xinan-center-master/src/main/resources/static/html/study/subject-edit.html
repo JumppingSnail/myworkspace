@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>专题管理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+        
+        .layui-form-item{
+            justify-content: flex-end;
+            padding-top: 10px;
+            padding-right: 10px;
+        }
+        
+        
+        img{
+            max-height: 100%;
+            max-width: 100%;
+            position: relative;
+            margin: 20px auto;
+        }
+    
+        .layui-icon{
+            margin-right: 0px!important;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-form layui-edit-form" id="edit-div">
+    <input type="hidden" id="id" name="id"/>
+    <input type="hidden" id="imageUrl" name="imageUrl"/>
+    
+    <div class="layui-row">
+        <div class="layui-col-sm4">
+            <label class="layui-form-label"><span class="layui-badge-required"></span>专题名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="subjectName" id="subjectName" value="" lay-verify="required" class="layui-input" 
+                    maxlength="50" lay-reqtext="专题名称不能为空" />
+            </div>
+        </div>
+        
+        <div class="layui-col-sm4">
+            <label class="layui-form-label">排序号</label>
+            <div class="layui-input-block">
+                <input type="text" name="subjectSort" id="subjectSort" value="1" lay-verify="number" class="layui-input" maxlength="50" />
+            </div>
+        </div>
+    </div>
+    
+    <div class="layui-form-item layui-form-text">
+         <label class="layui-form-label">专题介绍</label>
+         <div class="layui-input-block">
+             <textarea name="subjectDescription" id="subjectDescription" class="layui-textarea" 
+                    maxlength="300"></textarea>
+         </div>
+     </div>
+    
+    <div class="layui-row">
+        <div class="layui-col-sm4">
+            <label class="layui-form-label"><span class="layui-badge-required"></span>专题图标</label>
+            <div class="layui-input-block">
+                <button type="button" class="layui-btn upload-file-btn layui-upload-btn" id="upload">
+                    <i class="layui-icon">&#xe67c;</i>上传图标图片
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="layui-row">
+        <img id="icon-image-id" src="" alt="" style="width:88px;">
+    </div>
+    
+    <div class="layui-row">
+        <div class="layui-col-sm4">
+            <label class="layui-form-label"></label>
+            <div class="layui-input-block">
+                <button type="submit" class="layui-btn" lay-submit="" lay-filter="saveBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'upload'], function () {
+        var form = layui.form;
+        var layer = layui.layer;
+        var $ = layui.$;
+        var upload = layui.upload;
+        
+        var subjectData = global_getLocalStorage("subject-list#Object") || {};
+        global_removeLocalStorage("subject-list#Object");
+        
+        if(subjectData.id){
+            $('#id').val(subjectData.id);
+            
+            $('#subjectName').val(subjectData.subject_name);
+            $('#subjectSort').val(subjectData.subject_sort);
+            
+            $('#subjectDescription').val(subjectData.subject_description);
+            $('#imageUrl').val(subjectData.image_url);
+            
+            if(subjectData.image_url){
+                $("#icon-image-id").attr('src',getRealUrl(subjectData.image_url)).show();
+            }
+            
+            form.render();
+        }
+        
+      //普通图片上传
+        $('.upload-file-btn').each(function () {
+            upload.render({
+                elem: this
+                ,url: getRealUrl('/pub/upfile.do')
+                ,done: res=>{
+                    //上传失败
+                    if(res.result == 'ok'){
+                        $("#imageUrl").val(res.data);
+                        $("#icon-image-id").attr('src',getRealUrl(res.data)).show();
+                    }else{
+                        alert_msg('上传失败，请重试！', 2, 0);
+                    }
+                }
+                ,error: function(){
+                    //上传失败
+                    return alert_msg('上传失败，请重试！', 2, 0);
+                }
+            });
+        });
+      
+        var isLoading = false;
+        //监听提交
+        form.on('submit(saveBtn)', function(data) {
+            if(!$('#imageUrl').val()){
+                alert_msg('请先选择图标再提交！', 2, 0);
+                return false;
+            }
+            
+            if(!isLoading){
+                isLoading = true
+                $.ajax({
+                    url: getRealUrl("/study/saveSubject.do"),
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(data.field),
+                    success: function(data) {
+                        isLoading = false
+                        if (data.result == 'ok') {
+                            var iframeIndex = parent.layer.getFrameIndex(window.name);
+                            parent.layer.close(iframeIndex);
+                            parent.layui.table.reload('currentTableId');
+                            parent.alert_msg('操作成功！');
+                            
+                        } else if(data.result == '310') {
+                            alert_msg('该专题名称已经存在，请更换其他名称！', 2, 0);
+                            
+                        } else {
+                            alert_msg('服务器内部错误！',2,0);
+                        }
+                    },
+                    error: function () {
+                        isLoading = false
+                    }
+                });
+            }
+            return false;
+        });
+        
+        
+    });
+
+</script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>新增知识库</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layui-form layui-edit-form" id="edit-div">
+        <input type="hidden" id="id" name="id" />
+        <input type="hidden" id="reposUrl" name="reposUrl" />
+        
+        <div class="layui-row">
+            <div class="layui-col-sm6">
+                <label class="layui-form-label"><span class="layui-badge-required"></span>栏目</label>
+                <div class="layui-form layui-input-block" lay-filter="catId-filter">
+                    <select name="catId" id="catId" class="layui-input">
+						
+					</select>
+                </div>
+            </div>
+            
+            <div class="layui-col-sm6">
+                <label class="layui-form-label">发行日期</label>
+                <div class="layui-input-block">
+                    <input type="text" name="publishDate" id="publishDate" value="" class="layui-input" readonly="readonly" style="border: 1px solid #DCDDE0!important;background: #fff!important;" />
+                </div>
+            </div>
+        </div>
+        
+        <div class="layui-form-item layui-form-text">
+        	<label class="layui-form-label"><span class="layui-badge-required"></span>标题</label>
+            <div class="layui-input-block">
+                <input type="text" name="reposTitle" id="reposTitle" lay-reqtext="标题不能为空" lay-verify="required" value="" class="layui-input" maxlength="100" />
+            </div>
+       	</div>
+       	
+       	<div class="layui-form-item layui-form-text">
+        	<label class="layui-form-label">作者</label>
+            <div class="layui-input-block">
+                <input type="text" name="reposAuthor" id="reposAuthor" value="" class="layui-input" maxlength="100" />
+            </div>
+       	</div>
+
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label"><span class="layui-badge-required"></span>摘要</label>
+            <div class="layui-input-block">
+                <textarea name="reposDigest" id="reposDigest" class="layui-textarea" lay-reqtext="摘要不能为空" lay-verify="required" maxlength="800"></textarea>
+            </div>
+        </div>
+        
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">关联配方</label>
+            <div class="layui-input-block">
+                <textarea name="reposDrug" id="reposDrug" class="layui-textarea" maxlength="800"></textarea>
+            </div>
+        </div>
+
+        <div class="layui-row">
+            <div class="layui-col-sm4">
+                <label class="layui-form-label"></label>
+                <div class="layui-input-block">
+                    <button type="submit" class="layui-btn" lay-submit="" lay-filter="saveBtn">保存</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+    <script src="../../js/app.js" charset="utf-8"></script>
+    <script src="../../lib/moment.min.js"></script>
+    <script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+    <script>
+        layui.use(['form', 'laydate'], function() {
+            var form = layui.form;
+            var layer = layui.layer;
+            var $ = layui.$;
+            var laydate = layui.laydate;
+
+            var nowDate = moment().format('YYYY-MM-DD');
+            
+            function getRealFullUrl(url){
+     		   let protocol = window.location.protocol;
+     		   let host = window.location.host;
+     		   return protocol + '//'+host+'/'+url;
+     		}
+            
+            $('#reposUrl').val(getRealFullUrl('xaphone/index?id='));
+            
+         	// 初始化
+            laydate.render({
+                elem: '#publishDate', //指定元素
+                value: nowDate,
+                type: 'date',
+                showBottom: false
+            });
+            
+            
+            $.ajax({
+                url: getRealUrl('/repos/allCatagorylist.do'),
+                success:function(res){
+                   for(var i =0;i<res.data.length;i++){
+                       $("#catId").append("<option value=\""+res.data[i].id+"\">"+res.data[i].cat_name+"</option>");
+                   }
+                   //重新渲染
+                   layui.form.render("select");
+                }
+            });
+
+            //监听提交
+            var isLoading = false
+            form.on('submit(saveBtn)', function(data) {
+            	if(!isLoading){
+		            isLoading = true
+                    
+                    $.ajax({
+                        url: getRealUrl("/repos/saveRepos.do"),
+                        type: "POST",
+                        contentType: "application/json; charset=utf-8",
+                        data: JSON.stringify(data.field),
+                        success: function(data) {
+                            isLoading = false
+                            if (data.result == 'ok') {
+                                var iframeIndex = parent.layer.getFrameIndex(window.name);
+                                parent.layer.close(iframeIndex);
+                                parent.layui.table.reload('currentTableId');
+                                parent.alert_msg('操作成功！');
+                                
+                            } else if(data.result == 'repeat') {
+                            	alert_msg('该标题文章已经在知识库中，请维护其他文章！', 2, 0);
+
+                            } else {
+                                alert_msg('服务器内部错误！', 2, 0);
+                            }
+
+                        },
+                        error: function () {
+                            isLoading = false
+                        }
+                    });
+                }
+            });
+
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.metamedical.mapper.BizTrainMapper">
+
+    <select id="getBizTrainList" resultType="java.util.HashMap">
+
+        select
+            train.id, train.train_subject, train.train_place, to_char(train.start_time, 'yyyy-MM-dd HH:ss:mm') start_time, to_char(train.end_time, 'yyyy-MM-dd HH:ss:mm') end_time, train.train_state,
+            train.object_type, train.train_content, train.create_user_name, to_char(train.update_time, 'yyyy-MM-dd HH:ss:mm') update_time
+        from
+            biz_train train
+
+        where 1 = 1
+
+        <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(subject)">
+            AND train.train_subject LIKE #{subject}
+        </if>
+
+        <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(state)">
+            AND train.train_state LIKE #{state}
+        </if>
+
+        ORDER BY train.update_time desc
+    </select>
+
+	<select id="myTrainList" resultType="java.util.HashMap">
+		SELECT id, train_subject, train_place, start_time, train_state 
+		
+		  FROM (
+			SELECT a.id, a.train_subject, a.train_place, a.start_time, a.train_state 
+			  FROM biz_train a 
+			  WHERE a.object_type='1'
+			    AND a.train_state IN ('2','3')
+			
+			UNION ALL 
+			
+			SELECT b.id, b.train_subject, b.train_place, b.start_time, b.train_state 
+			  FROM biz_train b 
+			    JOIN biz_train_hospital bth ON b.id=bth.train_id 
+			  WHERE b.object_type='2'
+			    AND b.train_state IN ('2','3')
+			    
+			    <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(orgId)">
+			    	AND bth.org_id=#{orgId}
+			    </if>
+			    
+			UNION ALL 
+			
+			SELECT c.id, c.train_subject, c.train_place, c.start_time, c.train_state 
+			  FROM biz_train c 
+			    JOIN biz_train_user btu ON btu.train_id=c.id 
+			  WHERE c.object_type='3'
+			    AND c.train_state IN ('2','3')
+			    <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(userId)">
+			    	AND btu.user_id=#{userId}
+			    </if>
+		) tmp
+		
+		ORDER BY tmp.train_state, tmp.start_time
+	</select>
+
+</mapper>

@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>知识内容管理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+
+        body {
+            background-color: #ffffff;
+            height: calc(100vh - 40px);
+            overflow-y: scroll;
+        }
+        .layui-row{
+            height: 100%;
+            border: 1px solid #DCDDE0;
+            border-radius: 8px;
+            overflow-y: scroll;
+        }
+        .layui-col-sm3{
+            border-right: 1px solid #DCDDE0;
+        }
+        .title{
+            height: 44px;
+            line-height: 44px;
+            color: #333;
+            font-size: 14px;
+            padding: 0 10px;
+            border-bottom: 1px solid #DCDDE0;
+            cursor: pointer;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space: nowrap;
+        }
+        .menu{
+            height: 44px;
+            line-height: 44px;
+            color: #666;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 1px solid #DCDDE0;
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .layui-col-sm3 i{
+            cursor: pointer;
+        }
+        .chapter-title{
+            height: 44px;
+            line-height: 44px;
+            color: #333;
+            padding: 0 10px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #DCDDE0;
+        }
+        .chapter-name,.section-name{
+            flex: 1;
+            text-align: left;
+            height: 100%;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .section-title{
+            height: 44px;
+            line-height: 44px;
+            color: #333;
+            padding: 0 24px 0 36px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #DCDDE0;
+        }
+        /*.layui-col-sm9{*/
+        /*    background: red;*/
+        /*}*/
+        .active{
+            background: #f2f2f2;
+        }
+        .layui-col-sm3 p:hover{
+            background: #f3feff;
+        }
+        .title:hover,.menu:hover{
+            background: none!important;
+        }
+        .contentInfo{
+            display: none;
+        }
+        #content>div:nth-child(2){
+            height: calc(100vh - 167px)!important;
+        }
+        .layui-col-sm3,.layui-col-sm9{
+            overflow-y: scroll;
+            height: 100%;
+            padding-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="layui-row">
+        <div class="layui-col-sm3">
+            <p class="title active">
+                标题：<span id="reposTitle-show"></span>
+            </p>
+            <p class="menu">
+                目录
+                <i title="新增章节" class="fa fa-plus menu-add"></i>
+            </p>
+            <div class="content-box">
+            </div>
+        </div>
+        <div class="layui-col-sm9">
+            <div class="bookInfo">
+                <div class="layui-form layui-edit-form" id="edit-div">
+                    <input type="hidden" id="id" name="id" />
+
+                    <div class="layui-row" style="border: none;height: auto;overflow: inherit;">
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label"><span class="layui-badge-required"></span>栏目</label>
+                            <div class="layui-form layui-input-block" lay-filter="catId-filter">
+                                <select name="catId" id="catId" class="layui-input">
+
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="layui-col-sm6">
+                            <label class="layui-form-label">发行日期</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="publishDate" id="publishDate" value="" class="layui-input" readonly="readonly" style="border: 1px solid #DCDDE0!important;background: #fff!important;" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item layui-form-text">
+                        <label class="layui-form-label"><span class="layui-badge-required"></span>标题</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="reposTitle" id="reposTitle" lay-reqtext="标题不能为空" lay-verify="required" value="" class="layui-input" maxlength="100" />
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item layui-form-text">
+                        <label class="layui-form-label">作者</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="reposAuthor" id="reposAuthor" value="" class="layui-input" maxlength="100" />
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item layui-form-text">
+                        <label class="layui-form-label"><span class="layui-badge-required"></span>摘要</label>
+                        <div class="layui-input-block">
+                            <textarea name="reposDigest" id="reposDigest" class="layui-textarea" lay-reqtext="摘要不能为空" lay-verify="required" maxlength="800"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item layui-form-text">
+                        <label class="layui-form-label">关联配方</label>
+                        <div class="layui-input-block">
+                            <textarea style="height: 120px;" name="reposDrug" id="reposDrug" class="layui-textarea" maxlength="800"></textarea>
+                        </div>
+                    </div>
+
+<!--                    <div class="layui-row">-->
+                        <div class="layui-col-sm4">
+                            <label class="layui-form-label"></label>
+                            <div class="layui-input-block">
+                                <button type="submit" class="layui-btn saveBtn" lay-submit="" lay-filter="saveBtn">保存</button>
+                            </div>
+                        </div>
+<!--                    </div>-->
+
+                </div>
+            </div>
+            <div class="contentInfo">
+                <div class="layui-row" style="border: none;height: auto;overflow: auto;">
+                    <div class="layui-col-sm6">
+                        <label class="layui-form-label">章节标题</label>
+                        <div class="layui-input-block" style="margin-right: 0;">
+                            <input type="text" name="trainSubject" id="trainSubject" class="layui-input"/>
+                        </div>
+                    </div>
+                    <div class="layui-col-sm6">
+                        <div class="layui-input-block" style="text-align: right;margin-right: 0;">
+                            <button style="height: 36px;margin-top: 0;" title="切换目录自动保存，无需手动点击" type="submit" class="layui-btn" lay-submit="" lay-filter="saveContentBtn">保存</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item layui-form-text">
+                    <label class="layui-form-label">章节内容</label>
+                    <div class="layui-input-block" style="clear: both;overflow: hidden;margin-right: 0;">
+                        <div id="content" name="trainContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/moment.min.js"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script type="text/javascript" src="../../js/lay-module/wangEditor/wangEditor.js"></script>
+
+<script>
+	layui.use(['form', 'table', 'layer', 'laydate'], function() {
+		var $ = layui.jquery,
+				form = layui.form,
+				layer = layui.layer,
+				table = layui.table;
+		var laydate = layui.laydate;
+
+		var nowDate = moment().format('YYYY-MM-DD');
+        // 初始化
+		laydate.render({
+			elem: '#publishDate', //指定元素
+			value: nowDate,
+			type: 'date',
+			showBottom: false
+		});
+
+		// 获取栏目列表
+		$.ajax({
+			url: getRealUrl('/repos/allCatagorylist.do'),
+			success:function(res){
+				for(var i =0;i<res.data.length;i++){
+					$("#catId").append("<option value=\""+res.data[i].id+"\">"+res.data[i].cat_name+"</option>");
+				}
+				//重新渲染
+				form.render("select");
+			}
+		});
+
+
+
+		//------------wangEditor---------------
+		var TOKEN = global_getLocalStorage(KEY_TOKEN);
+		var E = window.wangEditor
+		var editor = new E('#content')
+
+		//上传图片时，可自定义file
+		editor.customConfig.uploadFileName = 'file'
+		//显示上传图片tab
+		editor.customConfig.uploadImgServer = getRealUrl('/pub/upfile.do')
+		// 将图片大小限制为 10M
+		editor.customConfig.uploadImgMaxSize = 10 * 1024 * 1024
+		//自定义header
+		editor.customConfig.uploadImgHeaders = {'access-token': TOKEN}
+		//自定义参数
+		editor.customConfig.uploadImgParams = {upType: 'wangEditor'}
+		// 自定义菜单配置
+		editor.customConfig.menus = [
+			'head',  // 标题
+			'bold',  // 粗体
+			'fontSize',  // 字号
+			'fontName',  // 字体
+			'italic',  // 斜体
+			'underline',  // 下划线
+			'strikeThrough',  // 删除线
+			'foreColor',  // 文字颜色
+			'backColor',  // 背景颜色
+			'link',  // 插入链接
+			'list',  // 列表
+			'justify',  // 对齐方式
+			'quote',  // 引用
+			'emoticon',  // 表情
+			'image',  // 插入图片
+			'table',  // 表格
+			'undo',  // 撤销
+			'redo'  // 重复
+		]
+		//自适应宽度
+		// editor.customConfig.initialFrameWidth = '100%'
+		//初始化 wangEditor
+		editor.customConfig.zIndex = 100
+		editor.create();
+
+
+
+
+		var dataJson = global_getLocalStorage("repository-edit#mapObject");
+		global_removeLocalStorage("repository-edit#mapObject")
+		getDataList();
+		fetchRepositoryInfo();
+		// 新增章
+		$('.menu-add').click(function () {
+			let num = $('.chapter').length + 1;
+            // 请求后端新增章节
+            let obj = {};
+            obj.reposId = dataJson.id;
+            obj.sectionName = '第'+num+'章';
+            obj.sectionLevel = 1;
+            obj.sectionSort = num;
+			$.ajax({
+				url : getRealUrl("/repos/saveSection.do"),
+				type : "POST",
+				data: JSON.stringify(obj),
+				contentType : "application/json; charset=utf-8",
+				success : function(data) {
+					if(data.result === 'ok'){
+						let content = '<div class="chapter" data-id="'+data.data+'" data-num="'+num+'"><p class="chapter-title"><span class="chapter-name">'+obj.sectionName+'</span><span><i title="向上移动一行" class="fa fa-arrow-up chapter-up"></i>&nbsp;<i title="向下移动一行" class="fa fa-arrow-down chapter-down"></i>&nbsp;<i title="删除" class="fa fa-minus chapter-delete"></i>&nbsp;<i title="新增章节" class="fa fa-plus chapter-add"></i></span></p><div class="section"></div></div>';
+						$('.content-box').append(content);
+						
+						$(".chapter[data-id='"+ data.data +"']").find('.chapter-name').click();
+						
+					}else{
+						alert_msg('操作未成功，请稍后重试或联系管理员！', 7, 0);
+					}
+				}
+			});
+		})
+        // 新增节
+		$(document).on('click','.chapter-add',function () {
+			let num = $(this).parents('.chapter').find('.section').find('p').length + 1;
+			let that = $(this);
+			// 请求后端新增章节
+			let obj = {};
+			obj.reposId = dataJson.id;
+			obj.pSectionId = $(this).parents('.chapter').attr('data-id');
+			obj.sectionName = '第'+num+'节';
+			obj.sectionLevel = 2;
+			obj.sectionSort = num;
+			$.ajax({
+				url : getRealUrl("/repos/saveSection.do"),
+				type : "POST",
+				data: JSON.stringify(obj),
+				contentType : "application/json; charset=utf-8",
+				success : function(data) {
+					if(data.result === 'ok'){
+						let content = '<p class="section-title" data-id="'+ data.data +'" data-num="'+ num +'"><span class="section-name">'+ obj.sectionName +'</span><span><i title="向上移动一行" class="fa fa-arrow-up section-up"></i>&nbsp;<i title="向下移动一行" class="fa fa-arrow-down section-down"></i>&nbsp;<i title="删除" class="fa fa-minus section-delete"></i></span></p>';
+						that.parents('.chapter').find('.section').append(content);
+						$(".section-title[data-id='"+ data.data +"']").find('.section-name').click();
+						
+					}else{
+						alert_msg('操作未成功，请稍后重试或联系管理员！', 7, 0);
+					}
+				}
+			});
+		})
+        // 章向上移动
+		$(document).on('click','.chapter-up',function () {
+			let num = $(this).parents('.chapter').attr('data-num');
+			if(num == 1){
+				alert_msg('已经是第一章');
+            }else{
+                $('.chapter').each(function (k,v) {
+                	// 前一个元素
+                    if(k == num-2){
+                    	$(v).attr('data-num',num);
+                    }
+                    // 当前元素
+                    if(k == num-1){
+	                    $(v).attr('data-num',num-1);
+                    }
+                })
+				// 请求后端重新排序
+				chapterSort('sort');
+            }
+		})
+		// 节向上移动
+		$(document).on('click','.section-up',function () {
+			let num = $(this).parents('.section-title').attr('data-num');
+			let section =  $(this).parents('.section');
+			if(num == 1){
+				alert_msg('已经是第一节');
+			}else{
+				$(this).parents('.section').find('.section-title').each(function (k,v) {
+					// 前一个元素
+					if(k == num-2){
+						$(v).attr('data-num',num);
+					}
+					// 当前元素
+					if(k == num-1){
+						$(v).attr('data-num',num-1);
+					}
+				})
+				// 请求后端重新排序
+				sectionSort('sort',section);
+			}
+		})
+        // 章向下移动
+		$(document).on('click','.chapter-down',function () {
+			let count = $('.chapter').length;
+			let num = $(this).parents('.chapter').attr('data-num');
+			if(num == count){
+				alert_msg('已经是最后一章');
+			}else{
+				$('.chapter').each(function (k,v) {
+					// 下一个元素
+					if(k == num){
+						$(v).attr('data-num',num);
+					}
+					// 当前元素
+					if(k == num-1){
+						$(v).attr('data-num',Number(num)+1);
+					}
+				})
+				// 请求后端重新排序
+				chapterSort('sort');
+            }
+		})
+		// 节向下移动
+		$(document).on('click','.section-down',function () {
+			let count = $(this).parents('.section').find('.section-title').length;
+			let num = $(this).parents('.section-title').attr('data-num');
+			let section =  $(this).parents('.section');
+			if(num == count){
+				alert_msg('已经是最后一节');
+			}else{
+				$(this).parents('.section').find('.section-title').each(function (k,v) {
+					// 下一个元素
+					if(k == num){
+						$(v).attr('data-num',num);
+					}
+					// 当前元素
+					if(k == num-1){
+						$(v).attr('data-num',Number(num)+1);
+					}
+				})
+
+				// 请求后端重新排序
+				sectionSort('sort',section);
+			}
+		})
+        // 删除章
+        $(document).on('click','.chapter-delete',function () {
+        	let that = $(this);
+	        layer.confirm('是否确认删除', {
+		        title: '提示',
+		        icon: 3
+	        }, function(index) {
+	        	// 请求后端删除该章节
+		        $.ajax({
+			        url : getRealUrl("/repos/deleteSection.do"),
+			        type : "POST",
+			        data: "sectionId="+that.parents('.chapter').attr('data-id'),
+			        //contentType : "application/json; charset=utf-8",
+			        success : function(data) {
+			        	if(data.result === 'ok'){
+			        		that.parents('.chapter').remove();
+					        chapterSort('delete');
+					        layer.close(index);
+                        }else{
+					        alert_msg('操作未成功，请稍后重试或联系管理员！', 7, 0);
+				        }
+			        }
+		        });
+	        });
+        })
+		// 删除节
+		$(document).on('click','.section-delete',function () {
+			let that = $(this);
+			layer.confirm('是否确认删除', {
+				title: '提示',
+				icon: 3
+			}, function(index) {
+				// 请求后端删除该章节
+				$.ajax({
+					url : getRealUrl("/repos/deleteSection.do"),
+					type : "POST",
+					data: "sectionId="+that.parents('.section-title').attr('data-id'),
+					//contentType : "application/json; charset=utf-8",
+					success : function(data) {
+						if(data.result === 'ok'){
+							let section =  that.parents('.section');
+							that.parents('.section-title').remove();
+							sectionSort('delete',section);
+							layer.close(index);
+						}else{
+							alert_msg('操作未成功，请稍后重试或联系管理员！', 7, 0);
+						}
+					}
+				});
+			});
+		})
+        // 章排序
+		function chapterSort(type){
+			if($('.chapter').length == 0){
+				return;
+            }
+			// 请求后端重新排序
+            let obj = [];
+			$('.chapter').each(function (k,v) {
+				if(type == 'sort'){
+					obj.push({'id':$(v).attr('data-id'),'sectionSort':$(v).attr('data-num')});
+                }else{
+					obj.push({'id':$(v).attr('data-id'),'sectionSort':k+1});
+				}
+			})
+			// 请求后端更新数据
+			$.ajax({
+				url : getRealUrl("/repos/saveSectionSort.do"),
+				type : "POST",
+				data: JSON.stringify({'sectionList':obj}),
+				contentType : "application/json; charset=utf-8",
+				success : function(data) {
+					if(data.result === 'ok'){
+						// 重新加载数据
+						getDataList()
+					}else{
+						alert_msg('操作未成功，请稍后重试或联系管理员！', 7, 0);
+					}
+				}
+			});
+        }
+		// 节排序
+        function sectionSort(type,section) {
+			if(section.find('p').length == 0){
+				return;
+			}
+	        let obj = [];
+	        section.find('p').each(function (k,v) {
+		        if(type == 'sort'){
+			        obj.push({'id':$(v).attr('data-id'),'sectionSort':$(v).attr('data-num')});
+		        }else{
+			        obj.push({'id':$(v).attr('data-id'),'sectionSort':k+1});
+		        }
+	        })
+	        // 请求后端更新数据
+	        $.ajax({
+		        url : getRealUrl("/repos/saveSectionSort.do"),
+		        type : "POST",
+		        data: JSON.stringify({'sectionList':obj}),
+		        contentType : "application/json; charset=utf-8",
+		        success : function(data) {
+			        if(data.result === 'ok'){
+				        // 重新加载数据
+				        getDataList()
+			        }else{
+				        alert_msg('操作未成功，请稍后重试或联系管理员！', 7, 0);
+			        }
+		        }
+	        });
+        }
+        // 加载数据列表
+        function getDataList(){
+	        $.ajax({
+		        url : getRealUrl("/repos/getSectionList.do?reposId="+dataJson.id),
+		        type : "GET",
+		        contentType : "application/json; charset=utf-8",
+		        success : function(data) {
+			        if(data.result === 'ok'){
+                        if(data.data.length > 0){
+                        	let content = ''
+	                        data.data.forEach(function (item) {
+		                        content += '<div class="chapter" data-id="'+item.id+'" data-num="'+item.sectionSort+'"><p class="chapter-title"><span class="chapter-name">'+item.sectionName+'</span><span><i title="向上移动一行" class="fa fa-arrow-up chapter-up"></i>&nbsp;<i title="向下移动一行" class="fa fa-arrow-down chapter-down"></i>&nbsp;<i title="删除" class="fa fa-minus chapter-delete"></i>&nbsp;<i title="新增章节" class="fa fa-plus chapter-add"></i></span></p><div class="section">';
+                                // 判断是否有二级目录
+                                if(item.children.length > 0){
+	                                item.children.forEach(function (k) {
+		                                content += '<p class="section-title" data-id="'+ k.id +'" data-num="'+ k.sectionSort +'"><span class="section-name">'+ k.sectionName +'</span><span><i title="向上移动一行" class="fa fa-arrow-up section-up"></i>&nbsp;<i title="向下移动一行" class="fa fa-arrow-down section-down"></i>&nbsp;<i title="删除" class="fa fa-minus section-delete"></i></span></p>';
+	                                })
+                                }
+		                        content += '</div></div>';
+	                        })
+                            $('.content-box').empty().append(content);
+                        }
+			        }else{
+				        alert_msg('操作未成功，请稍后重试或联系管理员！', 7, 0);
+			        }
+		        }
+	        });
+        }
+        // 加载文章基础信息
+        function fetchRepositoryInfo(){
+	        $.ajax({
+		        url : getRealUrl("/repos/fetchRepositoryInfo.do?id="+dataJson.id),
+		        type : "GET",
+		        contentType : "application/json; charset=utf-8",
+		        success : function(data) {
+			        if(data.result === 'ok'){
+				        $('#reposTitle').val(data.data.reposBean.reposTitle);
+				        $('#reposAuthor').val(data.data.reposBean.reposAuthor);
+				        $('#publishDate').val(data.data.reposBean.publishDate);
+				        $('#reposDigest').val(data.data.reposBean.reposDigest);
+				        $('#reposDrug').val(data.data.reposBean.reposDrug);
+				        $("#catId").find("option[value=" + data.data.reposBean.catId+ "]").prop("selected", true);
+				        form.render("select");
+
+				        $('#reposTitle-show').html(data.data.reposBean.reposTitle);
+
+			        }else{
+				        alert_msg('操作未成功，请稍后重试或联系管理员！', 7, 0);
+			        }
+		        }
+	        });
+        }
+        
+        function getRealFullUrl(url){
+  		   let protocol = window.location.protocol;
+  		   let host = window.location.host;
+  		   return protocol + '//'+host+'/'+url;
+  		}
+        
+        // 保存文章基础信息
+		var isLoading = false;
+		var alertFlag = true; // 是否显示提示信息，如果点击按钮则显示
+		form.on('submit(saveBtn)', function(data) {
+			data.field.id = dataJson.id
+			data.field.reposUrl = getRealFullUrl('xaphone/index?id='+data.field.id);
+			
+			if(!isLoading){
+				isLoading = true
+				$.ajax({
+					url: getRealUrl("/repos/saveRepos.do"),
+					type: "POST",
+					contentType: "application/json; charset=utf-8",
+					data: JSON.stringify(data.field),
+					success: function(data) {
+						isLoading = false
+						if (data.result == 'ok') {
+							if(alertFlag){
+								alert_msg('保存成功！');
+							}
+							alertFlag = true;
+							
+							$('#reposTitle-show').html($('#reposTitle').val());
+						} else if(data.result == 'repeat') {
+							alert_msg('该标题文章已经在知识库中，请维护其他文章！', 2, 0);
+
+						} else {
+							alert_msg('服务器内部错误！', 2, 0);
+						}
+
+					},
+					error: function () {
+						isLoading = false
+					}
+				});
+			}
+		});
+        //点击选中目录
+        var sectionId = '';
+		$(document).on('click','.chapter-name,.section-name',function (){
+			let id = '';
+			if($(this).hasClass('section-name')){
+				id = $(this).parent('.section-title').attr('data-id');
+            }else{
+                id = $(this).parents('.chapter').attr('data-id');
+            }
+            if($('.bookInfo').css('display') == 'block'){
+	            // 基础信息页面显示，先保存
+	            alertFlag = false;
+                $('.saveBtn').click();
+                
+	            // 选中
+	            $('.content-box p').removeClass('active');
+	            $('.title').removeClass('active');
+	            $(this).parent().addClass('active');
+	            // 切换到文章编辑页，取详情赋值
+	            sectionId = id;
+	            $('.contentInfo').show().siblings().hide();
+	            getContent(id);
+            }else{
+	            // 选中
+	            $('.content-box p').removeClass('active');
+	            $('.title').removeClass('active');
+	            $(this).parent().addClass('active');
+            	// 详情页面显示，先保存详情
+                let obj = {};
+	            obj.sectionName = $('#trainSubject').val();
+	            obj.id = sectionId;
+	            obj.sectionContent = editor.txt.html();
+	            $.ajax({
+		            url : getRealUrl("/repos/saveSection.do"),
+		            type : "POST",
+		            data: JSON.stringify(obj),
+		            contentType : "application/json; charset=utf-8",
+		            success : function(data) {
+			            if(data.result === 'ok'){
+				            // 切换到文章编辑页，取详情赋值
+				            sectionId = id;
+				            $('.contentInfo').show().siblings().hide();
+				            getContent(id);
+
+				            getDataList();
+
+			            }else{
+				            alert_msg('操作未成功，请稍后重试或联系管理员！', 7, 0);
+			            }
+		            }
+	            });
+            }
+
+        })
+        // 获取章节内容
+        function getContent(id){
+	        $.ajax({
+		        url : getRealUrl("/repos/fetchSectionContent.do?sectionId="+id),
+		        type : "GET",
+		        contentType : "application/json; charset=utf-8",
+		        success : function(data) {
+			        if(data.result === 'ok'){
+				        $('#trainSubject').val(data.data.sectionName);
+				        editor.txt.html(data.data.sectionContent?data.data.sectionContent:'')
+			        }else{
+				        alert_msg('操作未成功，请稍后重试或联系管理员！', 7, 0);
+			        }
+		        }
+	        });
+        }
+        // 点击切换基础信息
+        $('.title').click(function () {
+        	$(this).addClass('active');
+        	if(sectionId){
+		        let obj = {};
+		        obj.sectionName = $('#trainSubject').val();
+		        obj.id = sectionId;
+		        obj.sectionContent = editor.txt.html();
+		        $.ajax({
+			        url : getRealUrl("/repos/saveSection.do"),
+			        type : "POST",
+			        data: JSON.stringify(obj),
+			        contentType : "application/json; charset=utf-8",
+			        success : function(data) {
+				        if(data.result === 'ok'){
+					        $('.bookInfo').show().siblings().hide();
+					        $('.content-box p').removeClass('active');
+
+					        getDataList();
+				        }else{
+					        alert_msg('操作未成功，请稍后重试或联系管理员！', 7, 0);
+				        }
+			        }
+		        });
+            }else{
+		        $('.bookInfo').show().siblings().hide();
+		        $('.content-box p').removeClass('active');
+	        }
+        })
+        // 保存章节内容
+		// var isLoading = false
+		form.on('submit(saveContentBtn)', function(data) {
+			let obj = {};
+			obj.sectionName = $('#trainSubject').val();
+			obj.id = sectionId;
+			obj.sectionContent = editor.txt.html();
+			if(!isLoading){
+				isLoading = true
+				$.ajax({
+					url: getRealUrl("/repos/saveSection.do"),
+					type: "POST",
+					contentType: "application/json; charset=utf-8",
+					data: JSON.stringify(obj),
+					success: function(data) {
+						isLoading = false
+						if (data.result == 'ok') {
+							// 保存成功，刷新目录
+							getDataList();
+						} else {
+							alert_msg('服务器内部错误！', 2, 0);
+						}
+
+					},
+					error: function () {
+						isLoading = false
+					}
+				});
+			}
+		});
+	});
+
+</script>
+</body>
+</html>

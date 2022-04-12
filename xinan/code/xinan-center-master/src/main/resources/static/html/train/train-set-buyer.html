@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>选择医院</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <!-- 查询区域 -->
+        <fieldset class="table-search-fieldset">
+            <div>
+                <form class="layui-form" action="">
+                    <div class="layui-form-item">
+
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+        <!-- 查询区域 -->
+
+        <div style="margin: 0 20px;">
+            <!-- 列表区域 -->
+            <script type="text/html" id="toolbarDemo">
+                <div class="layui-btn-container">
+                    <button class="layui-btn data-add-btn" lay-event="save-btn"><i class="layui-icon">&#xe63c;</i>确认
+                    </button>
+                </div>
+            </script>
+
+            <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+            <!-- 列表区域 -->
+        </div>
+
+
+    </div>
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        var table = layui.table;
+
+        let oldTrainMapIdsArr = global_getLocalStorage("oldTrainMapIds") || '';
+        global_removeLocalStorage("oldTrainMapIds");
+
+        var tableObj = table.render({
+            elem: '#currentTableId',
+            url: getRealUrl('/org/getNoPageList.do'),
+            toolbar: '#toolbarDemo',
+            method: 'get',
+            defaultToolbar: [],
+            even: true,
+            cols: [
+                [{
+                    type: 'checkbox'
+                }, {
+                    field: 'orgName',
+                    title: '医院名称',
+                }, {
+                    field: 'orgSimpleName',
+                    title: '医院简称',
+                }, {
+                    field: 'orgAddress',
+                    title: '医院地址',
+                }]
+            ],
+
+            page: false,
+            height: 'full-105',
+            done: function (res) {
+                let oldTrainMapIds = [];
+                if (oldTrainMapIdsArr){
+                    oldTrainMapIds = oldTrainMapIdsArr.split(",");
+                }
+                let tableArr = res.data;
+                for (let i = 0; i < tableArr.length; i++){
+                    for (let j = 0; j < oldTrainMapIds.length; j++) {
+                        let oldId = oldTrainMapIds[i];
+                        if (res.data[i].id === oldId) {
+                            res.data[i]["LAY_CHECKED"] = 'true';
+                            let index = res.data[i]['LAY_TABLE_INDEX'];
+                            $('tr[data-index=' + index + '] input[type="checkbox"]').prop('checked', true);
+                            $('tr[data-index=' + index + '] input[type="checkbox"]').next().addClass('layui-form-checked');
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+
+
+        // toolbar监听事件
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'save-btn') {  // 监听添加操作
+                var orgName = [];
+                var trainMapIds = [];
+                var checkStatus = table.checkStatus('currentTableId');
+                for (var i = 0; i < checkStatus.data.length; i++) {
+                    orgName.push(checkStatus.data[i].orgName);
+                    trainMapIds.push(checkStatus.data[i].id)
+                }
+                parent.layui.$('#trainMap').val(orgName.join(","));
+                parent.layui.$('#trainMapIds').val(trainMapIds.join(","));
+                var iframeIndex = parent.layer.getFrameIndex(window.name);
+                parent.layer.close(iframeIndex);
+
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

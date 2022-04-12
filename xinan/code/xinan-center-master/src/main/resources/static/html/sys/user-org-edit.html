@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>机构列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+		<!-- 查询区域 -->
+        <fieldset class="table-search-fieldset">
+        </fieldset>
+		<!-- 查询区域 -->
+
+		<!-- 列表区域 -->
+		<div style="margin: 0 20px;">
+			<table class="layui-hide" id="currentTableId" lay-filter="currentTableId"></table>
+		</div>
+        
+    </div>
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        var table = layui.table;
+
+        var userObj = global_getLocalStorage("user-list#userObject") || {};
+		global_removeLocalStorage("user-list#userObject");
+		
+		var userId = userObj.id;
+		
+        var tableObj = table.render({
+            elem: '#currentTableId',
+            url: getRealUrl('/sys/getAllOrgList.do'),
+            method: 'get',
+            cols: [[
+                {type:'radio'},
+                {field: 'org_name', width: 300, title: '机构名称'},
+                {field: 'org_simple_name', title: '机构简称'}
+            ]],
+            limits: [20, 50, 100],
+            limit: 20,
+            page: true,
+            defaultToolbar: [],
+            even: true,
+            height: 'full-90',
+            done: function (res) {
+            	table.on('row(currentTableId)',function(obj){
+        			var jsonData = {
+       					'userId': userId,
+       					'orgId': obj.data.id
+       				};
+
+        			$.ajax({
+        				url : getRealUrl("/sys/saveUserOrg.do"),
+        				type : "POST",
+        				contentType : "application/json; charset=utf-8",
+        				data : JSON.stringify(jsonData),
+        				success : function(data) {
+        					if(data.result == 'ok'){
+						        var iframeIndex = parent.layer.getFrameIndex(window.name);
+						        parent.layer.close(iframeIndex);
+						        parent.layui.table.reload('currentTableId');
+                            }else{
+						        alert_msg('服务器内部错误！',2,0);
+					        }
+
+        				}
+        			});
+                });
+			}
+        });
+
+    });
+</script>
+
+</body>
+</html>

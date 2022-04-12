@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>培训管理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+
+        .upload-file-btn {
+            margin-top: 3px;
+        }
+
+        .show-img {
+            top: 8px;
+            position: absolute;
+            margin-left: 10px;
+            color: #027F87;
+        }
+
+        .layui-form-item {
+            margin: 0;
+            margin-top: 20px;
+        }
+
+        .layui-row {
+            margin-top: 20px;
+        }
+
+        .layui-col-sm6 {
+            margin-top: 0px;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-form layui-edit-form" id="edit-div" style="padding-bottom: 100px;">
+    <input type="hidden" id="id" name="id"/>
+
+    <div class="layui-row">
+        <label class="layui-form-label">培训主题</label>
+        <div class="layui-input-block">
+            <input type="text" name="trainSubject" id="trainSubject" class="layui-input"/>
+        </div>
+    </div>
+
+    <div class="layui-row">
+        <label class="layui-form-label">培训地址</label>
+        <div class="layui-input-block">
+            <input type="hidden" name="trainState" value="1" id="trainState" class="layui-input"/>
+            <input type="text" name="trainPlace" id="trainPlace" class="layui-input"/>
+        </div>
+    </div>
+
+    <div class="layui-row">
+        <div class="layui-col-sm6">
+            <label class="layui-form-label">开始时间</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" id="startTime" lay-verify="required|datetime"
+                       name="startTime" readonly="readonly"
+                       style="border: 1px solid #DCDDE0!important;background: #fff!important;"/>
+            </div>
+        </div>
+
+        <div class="layui-col-sm6">
+            <label class="layui-form-label">结束时间</label>
+            <div class="layui-input-block">
+                <input type="text" class="layui-input" id="endTime" lay-verify="required|datetime" value=""
+                       name="endTime"
+                       readonly="readonly" style="border: 1px solid #DCDDE0!important;background: #fff!important;"/>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-row">
+        <label class="layui-form-label">培训对象</label>
+        <div class="layui-form layui-input-block" style="z-index: 11111">
+            <select name="objectType" id="subjectType" lay-filter="trainType">
+                <option value="1">全公开</option>
+                <option value="2">指定医院</option>
+                <option value="3">指定医生</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="trainXz">
+        <div class="layui-row">
+            <label class="layui-form-label">对象选择</label>
+            <div class="layui-input-block">
+                <input type="hidden" id="trainMapIds" name="trainMapIds"/>
+                <input type="text" class="layui-input" id="trainMap" name="trainMap"
+                       readonly="readonly" value="" data-method="trainMapMethod" placeholder="点击选择培训对象"/>
+                <i class="layui-icon layui-select-search-icon">&#xe615;</i>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">培训内容</label>
+        <div class="layui-input-block" style="clear: both;overflow: hidden;">
+            <div id="content" name="trainContent">
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-row layui-submit-box" style="z-index: 111;">
+        <div class="layui-input-block layui-submit-button">
+            <button type="submit" class="layui-btn" lay-submit="" lay-filter="saveBtn">保存</button>
+            <button type="submit" class="layui-btn" lay-submit="" lay-filter="saveAndPublishBtn">保存并发布</button>
+        </div>
+    </div>
+
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/moment.min.js"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script type="text/javascript" src="../../js/lay-module/wangEditor/wangEditor.js"></script>
+
+<script>
+    layui.use(['form', 'layedit', 'laydate'], function () {
+        var form = layui.form;
+        var layer = layui.layer;
+        var $ = layui.$;
+        var laydate = layui.laydate;
+        var layedit = layui.layedit;
+
+        //------------wangEditor---------------
+        var TOKEN = global_getLocalStorage(KEY_TOKEN);
+        var E = window.wangEditor
+        var editor = new E('#content')
+
+        //上传图片时，可自定义file
+        editor.customConfig.uploadFileName = 'file'
+        //显示上传图片tab
+        editor.customConfig.uploadImgServer = getRealUrl('/pub/upfile.do')
+        // 将图片大小限制为 10M
+        editor.customConfig.uploadImgMaxSize = 10 * 1024 * 1024
+        //自定义header
+        editor.customConfig.uploadImgHeaders = {'access-token': TOKEN}
+        //自定义参数
+        editor.customConfig.uploadImgParams = {upType: 'wangEditor'}
+        //自适应宽度
+        editor.customConfig.initialFrameWidth = '100%'
+
+        // 自定义菜单配置
+        editor.customConfig.menus = [
+            'head',  // 标题
+            'bold',  // 粗体
+            'fontSize',  // 字号
+            'fontName',  // 字体
+            'italic',  // 斜体
+            'underline',  // 下划线
+            'strikeThrough',  // 删除线
+            'foreColor',  // 文字颜色
+            'backColor',  // 背景颜色
+            'link',  // 插入链接
+            'list',  // 列表
+            'justify',  // 对齐方式
+            'quote',  // 引用
+            'emoticon',  // 表情
+            'image',  // 插入图片
+            'table',  // 表格
+            'undo',  // 撤销
+            'redo'  // 重复
+        ]
+        //初始化 wangEditor
+        editor.customConfig.zIndex = 100
+        editor.create()
+
+
+        //------------------------------------
+
+        layedit.set({
+            uploadImage: {
+                url: getRealUrl('pub/upfile.do?upType='+'layedit') //接口url
+                ,type: 'POST' //默认post
+            }
+        });
+
+        var index = layedit.build('trainContent', {
+            height: 200
+        }); //建立编辑器
+
+        form.on('select(trainType)', function (data) {
+            $("#trainMapIds").val('');
+            $("#trainMap").val('');
+            var val = data.value;
+            if (val === "1") {
+                $("#trainXz").hide();
+            } else {
+                $("#trainXz").show();
+            }
+
+        });
+
+        // 初始化
+        laydate.render({
+            elem: '#startTime', //指定元素
+            value: new Date(),
+            type: 'datetime', // 可选择：年、月、日、时、分、秒
+            format: 'yyyy-MM-dd HH:mm:ss', //指定时间格式
+            btns: ["now", "confirm"]
+
+        });
+
+        laydate.render({
+            elem: '#endTime', //指定元素
+            value: new Date(),
+            type: 'datetime',
+            format: 'yyyy-MM-dd HH:mm:ss', //指定时间格式
+            btns: ["now", "confirm"]
+        });
+
+        let editData = global_getLocalStorage("train-edit#mapObject") || '';
+        global_removeLocalStorage("train-edit#mapObject");
+
+        if (editData) {
+            $("#id").val(editData.id)
+            $("#trainSubject").val(editData.train_subject)
+            $("#trainPlace").val(editData.train_place)
+            $("#startTime").val(editData.start_time)
+            $("#endTime").val(editData.end_time)
+            $("#trainState").val(editData.train_state)
+/*
+            layedit.setContent(index, )
+*/
+            editor.txt.html(editData.train_content)
+
+
+            if (editData.object_type) {
+                $("#subjectType").find("option[value=" + editData.object_type.trim() + "]").prop("selected", true);
+                if (editData.object_type !== '1') {
+                    $.getJSON(getRealUrl("/train/queryTrainMap.do?trainId=?1&subjectType=?2".replace("?1", editData.id).replace("?2", editData.object_type)), function (res) {
+                        $("#trainMapIds").val(res.trainMapIds);
+                        $("#trainMap").val(res.trainMap);
+                    });
+                    $("#trainXz").show();
+                } else {
+                    $("#trainXz").hide();
+                }
+
+            }
+
+            form.render();
+        } else {
+            $("#trainXz").hide();
+        }
+
+        //处理同步问题
+        form.verify({
+            trainContent: function (value) {
+                return layedit.sync(index);
+            }
+        });
+
+
+        // 监听点击输入框事件
+        $(".layui-input").on("click", function () {
+            var othis = $(this);
+            var method = othis.data("method");
+            active[method] ? active[method].call(this, othis) : "";
+        });
+
+        var active = {
+            trainMapMethod: function () {
+                let trainType = $("#subjectType").val();
+                let trainMapIds = $("#trainMapIds").val();
+                global_setLocalStorage("oldTrainMapIds", trainMapIds);
+                if (trainType === "2") {
+                    layer.open({
+                        title: '添加医院',
+                        type: 2,
+                        shade: 0.2,
+                        area: ['75%', '90%'],
+                        content: 'train-set-buyer.html',
+                    });
+                } else if (trainType === "3") {
+                    layer.open({
+                        title: '添加医生',
+                        type: 2,
+                        shade: 0.2,
+                        area: ['75%', '90%'],
+                        content: 'train-set-user.html',
+                    });
+                }
+            }
+        };
+
+        form.on('submit(saveAndPublishBtn)', function (data) {
+            let obj = data.field;
+            obj.trainState = "2";
+            obj.trainContent = editor.txt.html();
+            $.ajax({
+                url: getRealUrl("/train/saveTrain.do"),
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(obj),
+                success: function (data) {
+                    if (data.result === 'ok') {
+                        var iframeIndex = parent.layer.getFrameIndex(window.name);
+                        parent.layer.close(iframeIndex);
+                        parent.layui.table.reload('currentTableId');
+                        parent.alert_msg('操作成功！');
+
+                    } else {
+                        alert_msg('操作未成功，请稍后重试或联系管理员！', 7, 0);
+                    }
+                }
+            });
+
+            return false;
+        });
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+            let obj = data.field;
+            obj.trainContent = editor.txt.html();
+            $.ajax({
+                url: getRealUrl("/train/saveTrain.do"),
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(obj),
+                success: function (data) {
+                    if (data.result === 'ok') {
+                        var iframeIndex = parent.layer.getFrameIndex(window.name);
+                        parent.layer.close(iframeIndex);
+                        parent.layui.table.reload('currentTableId');
+                        parent.alert_msg('操作成功！');
+
+                    } else {
+                        alert_msg('操作未成功，请稍后重试或联系管理员！', 7, 0);
+                    }
+                }
+            });
+
+            return false;
+        });
+
+    });
+</script>
+</body>
+</html>

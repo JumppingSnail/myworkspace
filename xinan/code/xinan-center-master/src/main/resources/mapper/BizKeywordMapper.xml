@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.metamedical.mapper.BizKeywordMapper">
+
+    <select id="linkedKeywordList" resultType="java.util.HashMap">
+          SELECT bkr.id, bk.keyword_name, bkr.source_id 
+          
+            FROM biz_keyword bk 
+              JOIN biz_keyword_rel bkr ON bkr.keyword_id=bk.id 
+              
+           WHERE bkr.source_id=#{sourceId}
+           
+           ORDER BY bk.keyword_name 
+    </select>
+    
+    <select id="unlinkedKeywordList" resultType="java.util.HashMap">
+          SELECT bk.id, bk.keyword_name 
+          
+            FROM biz_keyword bk 
+            
+			WHERE NOT EXISTS (
+			    SELECT 1
+			      FROM biz_keyword_rel bkr 
+			     WHERE bk.id=bkr.keyword_id 
+			       AND bkr.source_id=#{sourceId}
+			)
+            
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(keyword)">
+              AND bk.keyword_name LIKE #{keyword}
+            </if>
+
+            ORDER BY bk.keyword_name 
+    </select>
+    
+    <select id="allKeywordList" resultType="java.util.HashMap">
+          SELECT bk.*
+          
+            FROM biz_keyword bk 
+              JOIN biz_keyword_rel rel ON bk.id=rel.keyword_id 
+              
+           WHERE rel.source_id=#{subjectId}
+           
+           ORDER BY bk.keyword_name 
+    </select>
+    
+</mapper>

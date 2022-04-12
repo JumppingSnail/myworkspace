@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.metamedical.mapper.BizCaseTreatmentMapper">
+
+    <select id="queryTreatmentList" resultType="java.util.HashMap">
+        select
+
+            bct.id,
+            bct.case_id,
+            bct.change_content,
+            bct.treat_name,
+            bct.treat_usage,
+            bct.treat_result,
+            bct.treat_sort,
+            bct.case_disease_id,
+            (
+                select string_agg (concat_ws('',bk.repos_title, bcd.drug_usage) || '', ',' ) from biz_knowledge bk
+			    join biz_case_doseage bcd on bk.id = bcd.drug_id where bcd.doseage_id = bct.id
+			) as drug_info
+
+        from biz_case_treatment bct
+        where bct.case_id = #{caseId}
+        and bct.case_disease_id = #{caseDiseaseId}
+        order by bct.treat_sort
+
+    </select>
+
+    <select id="queryTreatmentListByPhone" resultType="java.util.HashMap">
+        select
+
+            bct.id,
+            bct.case_id,
+            bct.change_content,
+            bct.treat_name,
+            bct.treat_usage,
+            bct.treat_result,
+            bct.treat_sort,
+            bct.case_disease_id,
+            (
+                select string_agg (concat_ws('',bk.repos_title, bcd.drug_usage) || '', ',' ) from biz_knowledge bk
+			    join biz_case_doseage bcd on bk.id = bcd.drug_id where bcd.doseage_id = bct.id
+			) as drug_info
+
+        from biz_case_treatment bct
+        where bct.case_id = #{caseId}
+        order by case_disease_id, bct.treat_sort
+
+    </select>
+
+</mapper>

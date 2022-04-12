@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.metamedical.mapper.BizTrainHospitalMapper">
+
+    <select id="selectOrgListByTrainId" resultType="cn.com.metamedical.model.entity.BaseOrg">
+        select
+            org.id, org.org_name
+        from
+            biz_train_hospital bth
+        left join base_org org on bth.org_id = org.id
+
+        where bth.train_id = #{trainId}
+        order by org.create_date
+    </select>
+
+    <select id="selectUserListByTrainId" resultType="cn.com.metamedical.model.entity.SysUser">
+        select
+            u.id, u.user_code, u.user_real_name
+        from
+            biz_train_user btu
+        left join sys_user u on btu.user_id = u.id
+
+        where btu.train_id = #{trainId}
+
+        order by u.create_date
+    </select>
+
+</mapper>

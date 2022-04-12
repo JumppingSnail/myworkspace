@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>user</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layui-form layui-edit-form" id="edit-div">
+        <div class="layui-row">
+            <div class="layui-col-sm6">
+                <label class="layui-form-label"><span class="layui-badge-required"></span>旧密码</label>
+                <div class="layui-input-block">
+                    <input type="password" name="oldPswd" id="oldPswd" lay-verify="required" lay-reqtext="密码不能为空" placeholder="请输入旧密码" value="" class="layui-input" maxlength="50" />
+                </div>
+            </div>
+
+        </div>
+        <div class="layui-row">
+            <div class="layui-col-sm6">
+                <label class="layui-form-label"><span class="layui-badge-required"></span>新密码</label>
+                <div class="layui-input-block">
+                    <input type="password" name="newPswd" id="newPswd" lay-verify="required" lay-reqtext="新密码不能为空" placeholder="密码要求最少8位，并且包含字符和数字" value="" class="layui-input" maxlength="50" />
+                </div>
+            </div>
+            <div class="layui-col-sm6">
+                <label class="layui-form-label"><span class="layui-badge-required"></span>再次输入</label>
+                <div class="layui-input-block">
+                    <input type="password" name="newPswdAgain" lay-verify="required|newPswdAgain" lay-reqtext="确认密码不能为空" placeholder="请再输入一次新密码" value="" class="layui-input" maxlength="50" />
+                </div>
+            </div>
+        </div>
+        <div class="layui-row">
+            <div class="layui-col-sm4">
+                <label class="layui-form-label"></label>
+                <div class="layui-input-block">
+                    <button type="submit" class="layui-btn" lay-submit="" lay-filter="saveBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+    <script src="../../js/app.js" charset="utf-8"></script>
+    <script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+    <script>
+        layui.use(['form'], function() {
+            var form = layui.form;
+            var layer = layui.layer;
+            var $ = layui.$;
+
+            form.verify({
+                newPswdAgain: function(value) {
+                    if (value != $("input[name='newPswd']").val()) {
+                        return '新密码不一致，请重新输入';
+                    }
+                }
+            });
+
+            //监听提交
+            form.on('submit(saveBtn)', function(data) {
+                $.post(getRealUrl("/sys/changeCurrentUserPassword.do"), {
+                        oldPassword: $('#oldPswd').val(),
+                        newPassword: $('#newPswd').val()
+                    },
+                    function(data) {
+                        if (data.result == '314') {
+                            alert_msg('原密码不正确！', 2, 0);
+
+                        } else if (data.result == 'weak') {
+                            alert_msg('密码强度不够，要求最少8位，并且至少包括大小写字母、数字、字符其中3种组合！', 2, 0);
+
+                        } else if (data.result == 'ok') {
+                            var iframeIndex = parent.layer.getFrameIndex(window.name);
+                            parent.layer.close(iframeIndex);
+                            parent.alert_msg('修改成功！');
+
+                        } else {
+                            alert_msg('服务器内部错误！', 2, 0);
+                        }
+                    }
+                );
+                return false;
+            });
+
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>中医诊断</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        .layui-form-label {
+            width: 70px;
+        }
+
+        td .layui-input {
+            margin-top: 0;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            padding: 0 14px 1px;
+            box-shadow: 1px 1px 20px rgba(0, 0, 0, .15);
+        }
+
+        body {
+            margin: 0;
+        }
+
+        .layuimini-main {
+            margin: 0 20px;
+            height: calc(100vh - 2px);
+        }
+
+        .selected-diagnostics {
+            height: 44px;
+            line-height: 44px;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #e2e2e2;
+        }
+
+        .selected-diagnostics div:nth-child(2) {
+            flex: 1;
+        }
+
+        .selected-diagnostics span {
+            padding: 0 20px;
+            position: relative;
+            border: none;
+            background: #2EB6E2;
+            height: 28px;
+            line-height: 28px;
+            color: #fff;
+            display: inline-block;
+            border-radius: 6px;
+            text-align: center;
+            margin-right: 10px;
+        }
+
+        .selected-diagnostics span i {
+            position: absolute;
+            color: #8A8A8A;
+            border-radius: 50%;
+            border: 1px solid #8A8A8A;
+            font-size: 14px;
+            width: 18px;
+            height: 18px;
+            line-height: 18px;
+            background: #fff;
+            right: -9px;
+            top: -9px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <div class="selected-diagnostics">
+            <div>
+                已选诊断：
+            </div>
+            <div class="diagnostics-box">
+
+            </div>
+        </div>
+        <!-- 查询区域 -->
+        <fieldset class="table-search-fieldset">
+            <div>
+                <form class="layui-form" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">中医诊断</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="reposTitle" id="reposTitle" autocomplete="off"
+                                       class="layui-input">
+                            </div>
+                        </div>
+
+                        <div class="layui-inline">
+                            <button class="layui-btn" lay-submit lay-filter="data-search-btn">
+                                <img src="../../image/search.png" alt="">
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+        <!-- 查询区域 -->
+
+        <!-- 列表区域 -->
+        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+        <script type="text/html" id="num_down">
+            {{d.LAY_TABLE_INDEX+1}}
+        </script>
+    </div>
+    <div class="layui-row layui-submit-box">
+        <div class="layui-input-block layui-submit-button">
+            <button type="submit" class="layui-btn" lay-submit="" lay-filter="saveBtn" style="margin-top:5px;">确认添加
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        var table = layui.table;
+
+        let cnDiseaseMaps = global_getLocalStorage("cnDiseaseMaps") || '';
+        global_removeLocalStorage("cnDiseaseMaps");
+
+        var tableObj = table.render({
+            elem: '#currentTableId',
+            id: 'currentTableId',
+            url: getRealUrl('/repos/reposList.do'),
+            method: 'get',
+            defaultToolbar: [],
+            cols: [[
+                // {type:'checkbox'},
+                {field: 'num', title: '序号', width: 120, align: 'center', templet: '#num_down', fixed: 'left'},
+                {field: 'repos_title', align: 'center', title: '疾病名称'},
+                {field: 'cat_name', align: 'center', title: '栏目'}
+            ]],
+            limits: [20, 50, 100],
+            limit: 20,
+            where: {
+                catNameSearch: "疾病"
+            },
+            text: {
+                none: '没有找到结果。您可联系管理员到知识库添加该记录，再回来添加'
+            },
+            page: true,
+            height: 'full-175'
+        });
+
+        //触发行单击事件
+        table.on('row(currentTableFilter)', function (obj) {
+            let code = obj.data.id;
+            let num = $('.diagnostics-box span').length;
+            let isFalse = false;
+            $('.diagnostics-box span').each(function (k, v) {
+                if ($(v).attr('data-code') == code) {
+                    $(v).remove();
+                    isFalse = true;
+                }
+            })
+            if (!isFalse) {
+                let text = obj.data.repos_title;
+                let span = '<span data-name="' + text + '" data-code="' + code + '">' + text + '<i class="layui-icon">&#x1006;</i></span>';
+                $('.diagnostics-box').append(span);
+            }
+        });
+        checkDisease(cnDiseaseMaps);
+
+        function checkDisease(cnDiseaseMaps) {
+            let idStr = cnDiseaseMaps.cnDiseaseIds;
+            let nameStr = cnDiseaseMaps.cnDiseaseMap;
+            if (idStr && nameStr) {
+                let ids = idStr.split(",");
+                let names = nameStr.split(",");
+                for (let i = 0; i < ids.length; i++) {
+                    let text = names[i];
+                    let code = ids[i];
+                    let span = '<span data-name="' + text + '" data-code="' + code + '">' + text + '<i class="layui-icon">&#x1006;</i></span>';
+                    $('.diagnostics-box').append(span);
+                }
+            }
+
+        }
+
+        //已选诊断列表删除
+        $(document).on("click", ".diagnostics-box span i", function () {
+            $(this).parent('span').remove();
+        });
+
+        //监听提交
+        form.on('submit(saveBtn)', function () {
+            var diseaseName = [];
+            var diseaseMapIds = [];
+            $('.diagnostics-box span').each(function (k, v) {
+                diseaseName.push($(v).attr('data-name'));
+                diseaseMapIds.push($(v).attr('data-code'));
+            })
+            if (diseaseMapIds.length <= 0 || diseaseName.length <= 0) {
+                alert_msg("请选择诊断！", 2);
+                return;
+            }
+            parent.layui.$('#cnDiseaseMap').val(diseaseName.join(","));
+            parent.layui.$('#cnDiseaseIds').val(diseaseMapIds.join(","));
+            var iframeIndex = parent.layer.getFrameIndex(window.name);
+            parent.layer.close(iframeIndex);
+        });
+
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            //执行搜索重载
+            table.reload('currentTableId', {
+                page: {
+                    curr: 1
+                },
+                where: {
+                    reposTitleSearch: data.field.reposTitle,
+                    reposStateSearch: data.field.reposState,
+                    catId: data.field.catId
+                }
+            });
+
+            return false;
+        });
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>用户角色维护</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-form layuimini-form" id="edit-div">
+	<div style="margin: 0 20px;">
+		<script type="text/html" id="toolbarDemo">
+           		<div class="layui-btn-container">
+                	<button class="layui-btn" lay-event="saveBtn"><i class="layui-icon">&#xe63c;</i>确定 </button>
+            	</div>
+        </script>
+		<table class="layui-hide" id="roleTableId" lay-filter="roleTableFilter"></table>
+	</div>
+	
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+
+	layui.use(['form','table'], function() {
+		var form = layui.form;
+		var table = layui.table;
+		var $ = layui.$;
+		
+		var userObj = global_getLocalStorage("user-list#userObject") || {};
+		global_removeLocalStorage("user-list#userObject");
+		
+		var userId = userObj.id;
+		var roleIds = userObj.role_id;
+		
+		var tableObj = table.render({
+			elem : '#roleTableId',
+			data : [],
+			toolbar: '#toolbarDemo',
+			defaultToolbar: [],
+            limit: Number.MAX_VALUE,
+            even: true,
+			cols : [[
+				{type:'checkbox'},
+				{field:'role_name', width: 120,title: '角色名称'},
+				{field:'remark',title: '角色说明'}
+			]],
+			height: 'full-90'
+		});
+
+		$.getJSON(getRealUrl("/sys/allRoleList.do"), function(json){
+			var roleIdArr = [];
+			if(roleIds){
+				roleIdArr = roleIds.split(',');
+			}
+			var data = json.data;
+			for (var i = 0; i < data.length; i++) {
+				if(roleIdArr.indexOf(data[i].id)>-1){
+					data[i]["LAY_CHECKED"]=true;
+				}
+			}
+			tableObj.reload({
+				data: data
+			});
+		});
+
+		table.on('toolbar(roleTableFilter)', function (obj) {
+            if (obj.event === 'saveBtn') {  
+            	var data = table.checkStatus('roleTableId').data;
+				var jsonData = {
+					'userId': userId,
+					'roleList': []
+				};
+
+				for(var i=0; i<data.length; i++){
+					jsonData['roleList'].push(data[i].id);
+				}
+
+    		    if(jsonData['roleList'].length==0){
+    		    	alert_msg('请先选择列表中的内容再提交请求！', 2, 0);
+    		    	return false;
+    		    }
+    		    
+	      		$.ajax({
+					url : getRealUrl("/sys/saveUserRole.do"),
+					type : "POST",
+					contentType : "application/json; charset=utf-8",
+					data : JSON.stringify(jsonData),
+					success : function(data) {
+						if(data.result == 'ok'){
+							var iframeIndex = parent.layer.getFrameIndex(window.name);
+							parent.layer.close(iframeIndex);
+							parent.layui.table.reload('currentTableId');
+							parent.alert_msg('保存成功！');
+                        }else{
+							alert_msg('服务器内部错误！',2,0);
+						}
+
+					}
+				});
+            }
+        });
+
+	});
+</script>
+</body>
+</html>

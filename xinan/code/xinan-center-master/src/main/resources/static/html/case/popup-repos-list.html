@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>出处列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+<style>
+    .layui-form-label {
+        width: 70px;
+    }
+    
+    td .layui-input {
+        margin-top: 0;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        padding: 0 14px 1px;
+        box-shadow: 1px 1px 20px rgba(0, 0, 0, .15);
+    }
+    
+    body{
+        margin: 0;
+    }
+
+    .layuimini-main {
+        margin: 0 20px;
+        height: calc(100vh - 2px);
+    }
+</style>
+
+<div class="layuimini-container">
+    <div class="layuimini-main">
+		<!-- 查询区域 -->
+        <fieldset class="table-search-fieldset">
+            <div>
+                <form class="layui-form" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">标题</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="reposTitle" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+
+                        <div class="layui-inline">
+                            <button class="layui-btn" lay-submit lay-filter="data-search-btn">
+                                <img src="../../image/search.png" alt="">
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+		<!-- 查询区域 -->
+
+		<!-- 列表区域 -->
+		<div>
+        	<table class="layui-hide" id="currentTableId" lay-filter="currentTableId"></table>
+        </div>
+    </div>
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        var table = layui.table;
+
+        var tableObj = table.render({
+            elem: '#currentTableId',
+            url: getRealUrl('/repos/reposList.do'),
+            method: 'get',
+            cols: [[
+                {type:'radio'},
+                {field: 'repos_title', title: '出处名称'},
+                {field: 'cat_name', title: '栏目'}
+            ]],
+            text: {
+                none: '没有找到结果。您可联系管理员到知识库添加该记录，再回来添加'
+            },
+            limits: [20, 50, 100],
+            limit: 20,
+            page: true,
+            defaultToolbar: [],
+            even: true,
+            height: 'full-20',
+            where: {
+                catNameSearch: "书籍"
+            },
+            done: function (res) {
+            	table.on('row(currentTableId)',function(obj){
+            		parent.layui.$('#reposId').val(obj.data.id);
+            		parent.layui.$('#reposName').val(obj.data.repos_title);
+
+                    parent.layui.$('#sectionId').val('');
+                    parent.layui.$('#sectionName').val('');
+
+            		var iframeIndex = parent.layer.getFrameIndex(window.name);
+	                parent.layer.close(iframeIndex);
+
+                });
+			}
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            //执行搜索重载
+            table.reload('currentTableId', {
+                page: {
+                    curr: 1
+                },
+                where: {
+                    reposTitleSearch : data.field.reposTitle,
+                    reposStateSearch : data.field.reposState,
+                    catId : data.field.catId
+                }
+            });
+
+            return false;
+        });
+
+    });
+</script>
+
+</body>
+</html>

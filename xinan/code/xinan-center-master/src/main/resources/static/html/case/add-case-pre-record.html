@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="renderer" content="webkit"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="format-detection" content="telephone=no"/>
+    <title>添加处方</title>
+
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+
+    <style type="text/css">
+        /*您可以将下列样式写入自己的样式表中*/
+        .childBody {
+            padding: 15px;
+        }
+
+        /*layui 元素样式改写*/
+        .layui-btn-sm {
+            line-height: normal;
+            font-size: 12.5px;
+        }
+
+        .layui-table-view .layui-table-body {
+            min-height: 256px;
+        }
+
+        .layui-table-cell .layui-input.layui-unselect {
+            height: 30px;
+            line-height: 30px;
+        }
+
+        /*设置 layui 表格中单元格内容溢出可见样式*/
+        .table-overlay .layui-table-view,
+        .table-overlay .layui-table-box,
+        .table-overlay .layui-table-body {
+            overflow: visible;
+        }
+
+        .table-overlay .layui-table-cell {
+            height: auto;
+            overflow: visible;
+        }
+
+        /*文本对齐方式*/
+        .text-center {
+            text-align: center;
+        }
+
+        .layui-card {
+            margin-top: 40px
+        }
+    </style>
+
+</head>
+<body class="childBody">
+<section class="layui-col-md10" style="margin: 0 auto; float: none;">
+    <div class="layui-row">
+
+        <div class="layui-col-sm4">
+            <label class="layui-form-label"><span class="layui-badge-required"></span>处方类型</label>
+            <div class="layui-input-block">
+                <input type="text" name="changeContent" id="changeContent" class="layui-input" value="方剂" maxlength="50"
+                       lay-verify="required" placeholder="" readonly="readonly"/>
+            </div>
+        </div>
+
+        <div class="layui-col-sm4">
+            <label class="layui-form-label"><span class="layui-badge-required"></span>处方剂量</label>
+            <div class="layui-input-block">
+                <input type="text" name="treatUsage" id="treatUsage" class="layui-input" value="" maxlength="50"
+                       placeholder="剂" lay-verify="required"/>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-row">
+
+        <div class="layui-col-sm4">
+            <label class="layui-form-label"><span class="layui-badge-required"></span>方剂名称</label>
+            <div class="layui-input-block">
+                <input type="hidden" id="reposId" name="reposId"/>
+                <input type="text" class="layui-input" id="reposName" name="reposName" lay-reqtext="方及名称不能为空"
+                       lay-verify="required" readonly="readonly" value="" data-method="openWin" placeholder="点击选择方剂名称"/>
+                <i class="layui-icon layui-select-search-icon">&#xe615;</i>
+            </div>
+        </div>
+
+        <div class="layui-col-sm4">
+            <label class="layui-form-label"><span class="layui-badge-required"></span>处方顺序</label>
+            <div class="layui-input-block">
+                <input type="text" name="treatSort" id="treatSort" class="layui-input" value="" maxlength="50"
+                       lay-verify="required" placeholder="填写处方使用顺序，如 1，2, 3"/>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label"><span class="layui-badge-required"></span>治疗效果</label>
+        <div class="layui-input-block">
+                <textarea name="treatResult" id="treatResult" class="layui-textarea" placeholder="治疗效果"
+                          lay-reqtext="治疗效果" lay-verify="required" maxlength="300"></textarea>
+        </div>
+    </div>
+    <div class="layui-card">
+        <div class="layui-card-header">处方用药</div>
+        <div class="layui-card-body layui-text" style="height: auto;">
+            <div id="toolbar">
+                <div>
+                    <button type="button" class="layui-btn layui-btn-sm" data-type="addRow" title="添加一行">
+                        <i class="layui-icon layui-icon-add-1"></i> 添加一行
+                    </button>
+                </div>
+            </div>
+
+            <!-- 列表 -->
+            <div id="tableRes" class="table-overlay">
+                <table id="dataTable" lay-filter="dataTable" class="layui-hide"></table>
+            </div>
+            <!-- 按钮 -->
+            <div id="action" class="text-center">
+                <button type="button" name="btnSave" class="layui-btn" data-type="save"><i
+                        class="layui-icon layui-icon-ok-circle"></i>保存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!--保存结果输出-->
+    <!--    <div class="layui-card">-->
+    <!--        <div class="layui-card-header">保存结果输出</div>-->
+    <!--        <div class="layui-card-body layui-text">-->
+    <!--            <blockquote class="layui-elem-quote layui-quote-nm">-->
+    <!--                <pre id="jsonResult"><span class="layui-word-aux">请点击“保存”后查看输出信息……</span></pre>-->
+    <!--            </blockquote>-->
+    <!--        </div>-->
+    <!--    </div>-->
+</section>
+<!--recommended script position-->
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script type="text/javascript">
+    let oldDataResult = [];
+    //layui 模块化引用
+    layui.use(['jquery', 'table', 'layer'], function () {
+            var $ = layui.$, table = layui.table, form = layui.form, layer = layui.layer;
+            //数据表格实例化
+            var layTableId = "layTable";
+            var tableIns = table.render({
+                elem: '#dataTable',
+                id: layTableId,
+                data: oldDataResult,
+                loading: true,
+                text: {
+                    none: '请添加药品！'
+                },
+                even: false, //不开启隔行背景
+                cols: [[
+                    {title: '序号', type: 'numbers'},
+                    {
+                        field: 'drugName', title: '药品名称', templet: function (d) {
+                            let value = `<div class="layui-input-block">
+
+                                        <input type="text" class="layui-input" lay-reqtext="药品不能为空"
+                                               lay-verify="required" readonly="readonly" id="${d.id}" data-method="openDrug" value="${d.drugName}" placeholder="点击选择选择药品名称"/>
+                                        <i class="layui-icon layui-select-search-icon">&#xe615;</i>
+                                    </div>`
+                            return value;
+                        }
+                    },
+                    {field: 'count', title: '用量', edit: 'text'},
+                    {
+                        field: 'id', title: '操作', templet: function (d) {
+                            let value = `<a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="del" lay-id="${d.id}"><i class="layui-icon layui-icon-delete"></i>移除</a>`
+                            return value;
+                        }
+                    }
+                ]],
+                limit: 1000
+            });
+
+            let caseObj = global_getLocalStorage("case-list-addPreRecord#obj") || {};
+            global_removeLocalStorage("case-list-addPreRecord#obj");
+
+            getDrugs();
+
+            // 监听点击输入框事件
+            $(document).on("click", ".layui-input", function () {
+                var othis = $(this);
+                var method = othis.data("method");
+                active[method] ? active[method].call(this, othis) : "";
+            });
+
+            function getDrugs() {
+                //查询中医诊断对应的处方药方，传递处方记录ID
+                window.oldDataResult = oldDataResult;
+                tableIns.reload({
+                    data: oldDataResult
+                });
+            }
+
+            //定义事件集合
+            var active = {
+                openDrug: function () {
+                    let idValue = $(this).attr("id");
+                    global_setLocalStorage("input-select-objId", idValue);
+                    var index = layer.open({
+                        title: '选择药品',
+                        type: 2,
+                        shade: 0.2,
+                        area: ['75%', '90%'],
+                        content: 'popup-drug-list.html',
+                    });
+                },
+                openWin: function () {
+                    var index = layer.open({
+                        title: '选择出处',
+                        type: 2,
+                        shade: 0.2,
+                        area: ['75%', '90%'],
+                        content: 'popup-dosease-list.html',
+                    });
+                },
+                addRow: function () {	//添加一行
+                    var oldData = oldDataResult;
+                    //维护count
+                    var cacheOldData = table.cache[layTableId];
+                    for (var i = 0; i < oldData.length; i++) {
+                        oldData[i].count = cacheOldData[i].count;
+                    }
+
+                    var newRow = {id: new Date().valueOf(), drugName: '', count: '一两'};
+                    oldData.push(newRow);
+                    tableIns.reload({
+                        data: oldData
+                    });
+                },
+                removeEmptyTableCache: function (obj) {
+                    var oldData = oldDataResult;
+                    //维护count
+                    var cacheOldData = table.cache[layTableId];
+
+                    for (var i = 0, row; i < oldData.length; i++) {
+                        row = oldData[i];
+                        row.count = cacheOldData[i].count;
+                        if (row.id + '' === obj.id + '') {
+                            oldData.splice(i, 1);    //删除一项
+                        }
+                        continue;
+                    }
+                    tableIns.reload({
+                        data: oldData
+                    });
+                },
+                save: function () {
+                    var oldData = oldDataResult;
+                    console.log(oldData);
+                    var oldDataCount = table.cache[layTableId];
+                    let paramArr = [];
+                    for (var i = 0, row, countRow; i < oldData.length; i++) {
+                        row = oldData[i];
+                        countRow = oldDataCount[i];
+                        if (row.drugName && countRow.count) {
+                            row.count = countRow.count;
+                            paramArr.push(row);
+                        }
+                    }
+                    let paramObj = {};
+                    paramObj.changeContent = $("#changeContent").val();
+                    paramObj.treatUsage = $("#treatUsage").val();
+                    paramObj.treatName = $("#reposName").val();
+                    paramObj.treatSort = $("#treatSort").val();
+                    paramObj.treatResult = $("#treatResult").val();
+                    paramObj.caseId = caseObj.id;
+                    paramObj.caseDiseaseId = caseObj.cd_id;
+                    paramObj.record = paramArr;
+                    if (!paramObj.caseId) {
+                        alert_msg("医案信息丢失，请关闭当前页面，重新打开！", 2);
+                        return;
+                    }
+                    if (!paramObj.changeContent) {
+                        alert_msg("请输入处方类型", 2);
+                        return;
+                    }
+                    if (!paramObj.treatUsage) {
+                        alert_msg("处方剂量", 2);
+                        return;
+                    }
+                    if (!paramObj.treatName) {
+                        alert_msg("方剂名称", 2);
+                        return;
+                    }
+                    if (!paramObj.treatSort) {
+                        alert_msg("处方顺序", 2);
+                        return;
+                    }
+                    if (!paramObj.treatResult) {
+                        alert_msg("治疗效果", 2);
+                        return;
+                    }
+                    console.log(paramObj);
+
+                    $.ajax({
+                        url: getRealUrl("/bizCaseTreatment/saveCaseTreatment.do"),
+                        type: "POST",
+                        contentType: "application/json; charset=utf-8",
+                        data: JSON.stringify(paramObj),
+                        success: function (data) {
+                            if (data.result === 'ok') {
+                                var iframeIndex = parent.layer.getFrameIndex(window.name);
+                                parent.layer.close(iframeIndex);
+                                parent.layui.table.reload('currentTableId');
+                                parent.alert_msg('操作成功！');
+                            } else {
+                                alert_msg('服务器内部错误！', 2, 0);
+                            }
+
+                        }
+                    });
+
+                    // document.getElementById("jsonResult").innerHTML = JSON.stringify(table.cache[layTableId], null, 2);	//使用JSON.stringify() 格式化输出JSON字符串
+                }
+            }
+
+            //激活事件
+            var activeByType = function (type, arg) {
+                if (arguments.length === 2) {
+                    active[type] ? active[type].call(this, arg) : '';
+                } else {
+                    active[type] ? active[type].call(this) : '';
+                }
+            }
+
+            //注册按钮事件
+            $('.layui-btn[data-type]').on('click', function () {
+                var type = $(this).data('type');
+                activeByType(type);
+            });
+
+            //监听select下拉选中事件
+            form.on('select(type)', function (data) {
+                var elem = data.elem; //得到select原始DOM对象
+                $(elem).prev("a[lay-event='type']").trigger("click");
+            });
+
+            //监听工具条
+            table.on('tool(dataTable)', function (obj) {
+                var data = obj.data, event = obj.event, tr = obj.tr; //获得当前行 tr 的DOM对象;
+                switch (event) {
+                    case "type":
+                        var select = tr.find("select[name='type']");
+                        if (select) {
+                            var selectedVal = select.val();
+                            if (!selectedVal) {
+                                layer.tips("请选择一个分类", select.next('.layui-form-select'), {tips: [3, '#FF5722']}); //吸附提示
+                            }
+                            $.extend(obj.data, {'type': selectedVal});
+                            activeByType('updateRow', obj.data);	//更新行记录对象
+                        }
+                        break;
+                    case "state":
+                        var stateVal = tr.find("input[name='state']").prop('checked') ? 1 : 0;
+                        $.extend(obj.data, {'state': stateVal})
+                        activeByType('updateRow', obj.data);	//更新行记录对象
+                        break;
+                    case "del":
+                        layer.confirm('真的删除行么？', function (index) {
+                            obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+                            layer.close(index);
+                            activeByType('removeEmptyTableCache', obj.data);
+                        });
+                        break;
+                }
+            });
+        }
+    );
+</script>
+
+</body>
+</html>

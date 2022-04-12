@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>医案编辑</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+<div class="layui-form layui-edit-form" id="edit-div">
+    <input type="hidden" id="id" name="id"/>
+
+    <div class="layui-row">
+        <div class="layui-col-sm4">
+            <label class="layui-form-label"><span class="layui-badge-required"></span>医案出处</label>
+            <div class="layui-input-block">
+                <input type="hidden" id="reposId" name="reposId"/>
+                <input type="text" class="layui-input" id="reposName" name="reposName" lay-reqtext="医案出处不能为空"
+                       lay-verify="required" readonly="readonly" value="" data-method="openWin" placeholder="点击选择医案出处"/>
+                <i class="layui-icon layui-select-search-icon">&#xe615;</i>
+            </div>
+        </div>
+
+        <div class="layui-col-sm4">
+            <label class="layui-form-label"><span class="layui-badge-required"></span>出处章节</label>
+            <div class="layui-input-block">
+                <input type="hidden" id="sectionId" name="sectionId"/>
+                <input type="text" class="layui-input" id="sectionName" name="sectionName"
+                       lay-reqtext="出处章节不能为空" lay-verify="required"
+                       readonly="readonly" value="" data-method="openReport" placeholder="点击选择出处章节"/>
+                <i class="layui-icon layui-select-search-icon">&#xe615;</i>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-row">
+        <div class="layui-col-sm4">
+            <label class="layui-form-label">患者名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="patientName" id="patientName" class="layui-input" value="" maxlength="50"
+                       placeholder="-"/>
+            </div>
+        </div>
+
+        <div class="layui-col-sm4">
+            <label class="layui-form-label"><span class="layui-badge-required"></span>患者年龄</label>
+            <div class="layui-input-block">
+                <input type="text" name="patientAge" id="patientAge" class="layui-input" value="" maxlength="50"
+                       lay-reqtext="年龄不能为空" placeholder="请输入年龄" lay-verify="required"/>
+            </div>
+        </div>
+
+        <div class="layui-col-sm4">
+            <label class="layui-form-label"><span class="layui-badge-required"></span>患者性别</label>
+            <div class="layui-form layui-input-block">
+                <select name="patientSex" id="patientSex" class="layui-input">
+                    <option value="2">未知</option>
+                    <option value="0">男</option>
+                    <option value="1">女</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label"><span class="layui-badge-required"></span>中医诊断</label>
+        <div class="layui-input-block">
+            <input type="hidden" id="cnDiseaseIds" name="cnDiseaseIds"/>
+            <input type="text" class="layui-input" id="cnDiseaseMap" name="cnDiseaseMap"
+                   readonly="readonly" value="" data-method="diseaseMapMethod" placeholder="点击选择中医诊断"
+                   lay-reqtext="中医诊断不能为空" lay-verify="required"/>
+            <i class="layui-icon layui-select-search-icon">&#xe615;</i>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label"><span class="layui-badge-required"></span>病因主诉</label>
+        <div class="layui-input-block">
+                <textarea name="caseDescription" id="caseDescription" class="layui-textarea" placeholder="病因主诉"
+                          lay-reqtext="病因主诉"  lay-verify="required" maxlength="300"></textarea>
+        </div>
+    </div>
+
+    <div class="layui-row">
+        <div class="layui-col-sm4">
+            <label class="layui-form-label"></label>
+            <div class="layui-input-block">
+                <button type="submit" class="layui-btn" lay-submit="" lay-filter="saveBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form'], function () {
+        var form = layui.form;
+        var layer = layui.layer;
+        var $ = layui.$;
+
+        let editObjId = global_getLocalStorage("case-list-edit#objId") || {};
+        global_removeLocalStorage("case-list-edit#objId")
+        if (editObjId){
+            $.getJSON(getRealUrl("/bizMedicalCase/getMedicalCase.do"),
+                {id: editObjId},
+                function(json){
+                   if (json.result === 'ok'){
+                       let info = json.data.info;
+                       let cnDiseaseIds = json.data.cnDiseaseIds;
+                       let cnDiseaseMap = json.data.cnDiseaseMap;
+                       if (info){
+                           $("#patientName").val(info.patient_name)
+                           $("#id").val(info.id)
+                           $("#patientAge").val(info.patient_age)
+                           $("#patientSex").find("option[value=" + info.patient_sex.trim() + "]").prop("selected", true);
+                           $("#reposId").val(info.repos_id)
+                           $("#reposName").val(info.repos_title)
+                           $("#sectionId").val(info.section_id)
+                           $("#sectionName").val(info.section_name)
+                           $("#caseDescription").val(info.case_description)
+                       }
+
+                       $("#cnDiseaseIds").val(cnDiseaseIds)
+                       $("#cnDiseaseMap").val(cnDiseaseMap)
+                       form.render();
+                   }
+                });
+        }
+
+
+        // 监听点击输入框事件
+        $(".layui-input").on("click", function () {
+            var othis = $(this);
+            var method = othis.data("method");
+            active[method] ? active[method].call(this, othis) : "";
+        });
+
+        var active = {
+            openWin: function () {
+                var index = layer.open({
+                    title: '选择出处',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['75%', '90%'],
+                    content: 'popup-repos-list.html',
+                });
+            },
+            openReport: function () {
+                let reposId = $("#reposId").val();
+                let jsonData = {
+                    reposId: reposId,
+                    sectionId: $("#sectionId").val(),
+                    sectionName: $("#sectionName").val()
+                }
+                if (!reposId) {
+                    alert_msg("请先选择出处!", 2)
+                    return;
+                }
+                global_setLocalStorage("case-edit.html#editData", jsonData);
+                var index = layer.open({
+                    title: '选择章节',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['40%', '80%'],
+                    content: 'popup-section-list.html',
+                });
+            },
+            diseaseMapMethod: function () {
+                let cnDiseaseIds = $("#cnDiseaseIds").val();
+                let cnDiseaseMap = $("#cnDiseaseMap").val();
+                let dataJson = {
+                    cnDiseaseIds: cnDiseaseIds,
+                    cnDiseaseMap:cnDiseaseMap
+                }
+                global_setLocalStorage("cnDiseaseMaps", dataJson);
+                layer.open({
+                    title: '添加中医诊断',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['75%', '90%'],
+                    content: 'popup-disease-list.html',
+                });
+            }
+        };
+
+        //监听提交
+        form.on('submit(saveBtn)', function (data) {
+            $.ajax({
+                url: getRealUrl("/bizMedicalCase/saveMedicalCase.do"),
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(data.field),
+                success: function (data) {
+                    if (data.result === 'ok') {
+                        var iframeIndex = parent.layer.getFrameIndex(window.name);
+                        parent.layer.close(iframeIndex);
+                        parent.layui.table.reload('currentTableId');
+                        parent.alert_msg('操作成功！');
+                    }else {
+                        alert_msg('服务器内部错误！', 2, 0);
+                    }
+
+                }
+            });
+
+        });
+
+    });
+</script>
+</body>
+
+</html>

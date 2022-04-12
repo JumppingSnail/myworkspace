@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>用户列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+		<!-- 查询区域 -->
+        <fieldset class="table-search-fieldset">
+            <div >
+                <form class="layui-form" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">手机号</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="userCodeSearch" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">名称</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="userNameSearch" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                             <label class="layui-form-label">状态</label>
+                             <div class="layui-input-inline">
+                                 <select name="userStateSearch" id="userStateSearch" class="layui-input">
+		                            <option value="">全部</option>
+							        <option value="1">使用中</option>
+							        <option value="0">停用</option>
+								</select>
+                             </div>
+                         </div>
+
+                        <div class="layui-inline">
+                            <button class="layui-btn" lay-submit lay-filter="data-search-btn">
+                                <img src="../../image/search.png" alt="">
+                            </button>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+		<!-- 查询区域 -->
+
+		<!-- 列表区域 -->
+		<div style="margin: 0 20px;">
+			<script type="text/html" id="toolbarDemo">
+           		<div class="layui-btn-container">
+                	<button class="layui-btn layui-btn data-add-btn" lay-event="add"><i class="layui-icon">&#xe654;</i>新增 </button>
+            	</div>
+        	</script>
+	
+	        <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+	
+			<script type="text/html" id="num_down">
+ 				{{d.LAY_TABLE_INDEX+1}}
+			</script>
+	        <script type="text/html" id="currentTableBar">
+				{{# if(d.user_type!='0'){ }}
+					{{# if(d.user_state=='1'){ }}
+						<a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">编辑</a>
+            			<a class="layui-btn layui-btn-normal layui-btn-xs data-count-save" lay-event="addRole">维护角色</a>
+            			<a class="layui-btn layui-btn-normal layui-btn-xs data-count-save" lay-event="addOrg">维护机构</a>
+						<a class="layui-btn layui-btn-xs layui-btn-normal data-count-delete" lay-event="stop">停用</a>
+
+					  {{# if(d.lock_status=='锁定'){ }}
+						<a class="layui-btn layui-btn-xs layui-btn-normal data-count-delete" lay-event="unlock">解锁</a>
+					  {{# } }}
+
+					{{# } }}
+						
+
+					{{# if(d.user_state=='0'){ }}
+						<a class="layui-btn layui-btn-xs layui-btn-normal data-count-delete" lay-event="start">启用</a>
+					{{# } }}
+            		
+            		<!--<a class="layui-btn layui-btn-xs layui-btn-normal data-count-delete" lay-event="delete">删除</a>-->
+
+					<a class="layui-btn layui-btn-normal layui-btn-xs data-count-save" lay-event="resetPwd">重置密码</a>
+				{{# } }}
+				
+        	</script>
+		</div>
+
+    </div>
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        var table = layui.table;
+
+        var currentUser = global_getLocalStorage("xinan#currentUser");
+		var userId = currentUser.userId;
+
+        var tableObj = table.render({
+            elem: '#currentTableId',
+            url: getRealUrl('/sys/userlist.do'),
+            toolbar: '#toolbarDemo',
+            method: 'get',
+            defaultToolbar: [],
+            even: true,
+            cols: [[
+                {field:'num', title: '序号', width:60, align: 'center',templet:'#num_down',fixed:'left'},
+                {field: 'user_code', width: 180, title: '手机号'},
+	            {field: 'user_real_name', width: 120, title: '姓名'},
+	            /* {field: 'user_type', width: 120, title: '用户类型', align: "center",templet:function(d){
+	            	if(d.user_type=='0'){
+	            		return '超级管理员';
+	            	}else if(d.user_type=='1'){
+	            		return '管理员';
+	            	}else if(d.user_type=='2'){
+	            		return '研究员';
+	            	}else if(d.user_type=='3'){
+	            		return '医生';
+	            	}else if(d.user_type=='4'){
+	            		return '其他';
+	            	}
+	            	
+		            return "";
+	            }}, */
+	            {field: 'org_name', title: '所属机构'},
+	            {field: 'role_name', title: '所属角色'},
+	            {field: 'user_state', width: 80, title: '状态', align: 'center',templet:function(d){
+	            	if(d.user_state=='1'){
+	            		return '使用中';
+	            	}else if(d.user_state=='0'){
+	            		return '停用';
+	            	}
+	            	
+		            return "";
+	            }},
+	            {title: '操作', width: 380, toolbar: '#currentTableBar', align: "center",fixed:'right'}
+
+            ]],
+            limits: [20, 50, 100],
+            limit: 20,
+            page: true,
+            height: 'full-107'
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            //执行搜索重载
+            table.reload('currentTableId', {
+                page: {
+                    curr: 1
+                },
+                where: {
+                	userCodeSearch : data.field.userCodeSearch,
+                	userNameSearch : data.field.userNameSearch,
+                	userStateSearch : data.field.userStateSearch,
+                }
+            });
+
+            return false;
+        });
+
+     	// toolbar监听事件
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'add') {  // 监听添加操作
+                var index = layer.open({
+                    title: '添加用户',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['75%', '90%'],
+                    content: 'user-edit.html',
+                });
+            }
+        });
+
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            
+            if (obj.event === 'edit') {
+	            global_setLocalStorage("user-list#userObject", data);
+	            var index = layer.open({
+                    title: '编辑用户',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['75%', '90%'],
+                    content: 'user-edit.html',
+                    success: function (layer, index) {
+
+                    },
+                });
+                return false;
+
+            } else if (obj.event === 'delete') {
+            	if(userId==data.id){
+            		alert_msg('不允许删除当前用户！');
+            		return false;
+            	}
+	            layer.confirm('确定删除该用户吗？',{title:'提示',icon: 3}, function (index) {
+                    $.post(getRealUrl("/sys/delUser.do"), {id: data.id},
+                    	function(data) {
+                    		if(data.result=='ok'){
+                    			alert_msg('删除成功！');
+            					layer.close(index);
+            					tableObj.reload();
+
+                    		}else{
+			                    alert_msg('服务器内部错误！',2,0);
+                            }
+
+        				}
+        			);
+                });
+	            
+            } else if (obj.event === 'stop') {
+            	if(userId==data.id){
+            		alert_msg('不允许停用当前用户！');
+            		return false;
+            	}
+	            layer.confirm('确定停用该用户吗？',{title:'提示',icon: 3}, function (index) {
+                    $.post(getRealUrl("/sys/stopUser.do"), {id: data.id},
+                    	function(data) {
+                    		if(data.result=='ok'){
+                    			alert_msg('操作成功！');
+            					layer.close(index);
+            					tableObj.reload();
+
+                    		}else{
+			                    alert_msg('服务器内部错误！',2,0);
+                            }
+
+        				}
+        			);
+                });
+
+            } else if (obj.event === 'start') {
+                $.post(getRealUrl("/sys/startUser.do"), {id: data.id},
+                	function(data) {
+                		if(data.result=='ok'){
+                			alert_msg('操作成功！');
+        					layer.close(index);
+        					tableObj.reload();
+
+                		}else{
+                   			alert_msg('服务器内部错误！',2,0);
+                        }
+    				}
+    			);
+	            
+            } else if (obj.event === 'addRole'){
+            	global_setLocalStorage("user-list#userObject", data);
+            	var indexForRole = layer.open({
+                    title: '编辑用户角色',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['75%', '90%'],
+                    content: 'user-role-edit.html',
+                    success: function (layer, index) {
+                       
+                    },
+                });
+                return false;
+
+            } else if (obj.event === 'addOrg'){
+            	global_setLocalStorage("user-list#userObject", data);
+            	var indexForRole = layer.open({
+                    title: '医院列表',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['75%', '90%'],
+                    content: 'user-org-edit.html',
+                    success: function (layer, index) {
+                    },
+                });
+                return false;
+                
+            } else if (obj.event === 'resetPwd'){
+            	layer.confirm('确定为该用户重置密码吗？',{title:'提示',icon: 3}, function (index) {
+                    $.post(getRealUrl("/sys/resetUserPwd.do"), {id: data.id},
+                    	function(data) {
+                    		if(data.result=='ok'){
+                    			alert_msg('重置成功！');
+			                    
+                            }else{
+			                    alert_msg('服务器内部错误！',2,0);
+                            }
+        				}
+        			);
+                });
+            	
+                return false;
+                
+            } else if (obj.event === 'unlock'){
+            	$.post(getRealUrl("/auth/unlockUser.do"), {userCode: data.user_code},
+                    	function(data) {
+                    		if(data.result=='ok'){
+                    			alert_msg('解锁成功！');
+                    			tableObj.reload();
+                            }else{
+			                    alert_msg('服务器内部错误！',2,0);
+                            }
+        				}
+        			);
+            	return false;
+            }
+            
+        });
+
+    });
+</script>
+
+</body>
+</html>

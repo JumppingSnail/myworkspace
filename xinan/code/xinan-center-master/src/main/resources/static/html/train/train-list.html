@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>培训管理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <!-- 查询区域 -->
+        <fieldset class="table-search-fieldset">
+            <div>
+                <form class="layui-form" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">培训主题</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="trainSubject" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">状态</label>
+                            <div class="layui-input-inline">
+                                <select name="trainState" class="layui-input">
+                                    <option value="">全部</option>
+                                    <option value="1">草稿</option>
+                                    <option value="2">进行中</option>
+                                    <option value="3">已结束</option>
+                                    <option value="4">已取消</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="layui-inline">
+                            <button class="layui-btn" lay-submit lay-filter="data-search-btn">
+                                <img src="../../image/search.png" alt="">
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+        <!-- 查询区域 -->
+        <div style="margin: 0 20px;">
+            <!-- 列表区域 -->
+            <script type="text/html" id="toolbarDemo">
+                <div class="layui-btn-container">
+                    <button class="layui-btn data-add-btn" lay-event="addnew"> <i class="layui-icon">&#xe654;</i>新增 </button>
+                </div>
+            </script>
+
+            <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+            <script type="text/html" id="num_down">
+                {{d.LAY_TABLE_INDEX+1}}
+            </script>
+            <script type="text/html" id="currentTableBar">
+                {{# if(d.train_state=='1'){ }}
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="modify">修改</a>
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="publish">发布</a>
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="delete">删除</a>
+                {{# } else if(d.train_state=='2') { }}
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="cancel">取消</a>
+                {{# } else if(d.train_state=='4') { }}
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="start">启用</a>
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="delete">删除</a>
+                {{# } }}
+            </script>
+        </div>
+
+    </div>
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function() {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table;
+
+        var tableObj = table.render({
+            elem: '#currentTableId',
+            url: getRealUrl('/train/list.do'),
+            toolbar: '#toolbarDemo',
+            method: 'get',
+            defaultToolbar: [],
+            even: true,
+            cols: [
+                [{
+                    field: 'num',
+                    title: '序号',
+                    width: 60,
+                    align: 'center',
+                    templet: '#num_down',
+                    fixed: 'left'
+                }, {
+                    field: 'train_subject',
+                    title: '培训主题',
+                    align: 'center'
+                }, {
+                    field: 'train_place',
+                    title: '培训地址',
+                    align: 'center'
+                }, {
+                    field: 'start_time',
+                    title: '培训开始时间',
+                    align: 'center'
+                }, {
+                    field: 'end_time',
+                    title: '培训结束时间',
+                    align: 'center'
+                }, {
+                    field: 'train_state',
+                    title: '状态',
+                    align: "center",
+                    templet: function (d) {
+                        if (d.train_state === '1'){
+                            return "草稿"
+                        }else if (d.train_state === '2'){
+                            return "进行中"
+                        }else if (d.train_state === '3'){
+                            return "已结束"
+                        }else if (d.train_state === '4'){
+                            return "已取消"
+                        }else{
+                            return ''
+                        }
+                    }
+                }, {
+                    field: 'update_time',
+                    title: '更新时间',
+                    align: 'center'
+                },{
+                    title: '操作',
+                    width: 300,
+                    toolbar: '#currentTableBar',
+                    align: "center",
+                    fixed: 'right',
+                    templet: function(d) {
+                        return d;
+                    }
+                }]
+            ],
+            limits: [20, 50, 100],
+            limit: 20,
+            page: true,
+            height: 'full-105'
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            //执行搜索重载
+            table.reload('currentTableId', {
+                page: {
+                    curr: 1
+                },
+                where: {
+                    trainSubject : data.field.trainSubject,
+                    trainState : data.field.trainState
+                }
+            });
+
+            return false;
+        });
+
+        // toolbar监听事件
+        table.on('toolbar(currentTableFilter)', function(obj) {
+            if (obj.event === 'addnew') { // 监听添加操作
+                var index = layer.open({
+                    title: '培训信息',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['95%', '95%'],
+                    content: 'train-edit.html',
+                });
+            }
+        });
+
+        table.on('tool(currentTableFilter)', function(obj) {
+            var data = obj.data;
+            if (obj.event === 'modify') {
+                global_setLocalStorage("train-edit#mapObject", data);
+
+                var index = layer.open({
+                    title: '培训信息',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['75%', '75%'],
+                    content: 'train-edit.html'
+                });
+
+            }else if (obj.event === 'publish') {
+                layer.confirm('确定发布培训记录吗？',{title:'提示',icon: 3}, function (index) {
+                    $.post(getRealUrl("/train/updateState.do"), {trainId: data.id, trainState: "2"},
+                        function(data) {
+                            if(data.result === 'ok'){
+                                alert_msg('发布成功！');
+                                layer.close(index);
+                                tableObj.reload();
+                            }else{
+                                alert_msg('服务器内部错误！',2,0);
+                            }
+
+                        }
+                    );
+                });
+            }else if (obj.event === 'start') {
+                layer.confirm('确定开启培训记录吗？',{title:'提示',icon: 3}, function (index) {
+                    $.post(getRealUrl("/train/updateState.do"), {trainId: data.id, trainState: "1"},
+                        function(data) {
+                            if(data.result === 'ok'){
+                                alert_msg('开启成功！');
+                                layer.close(index);
+                                tableObj.reload();
+                            }else{
+                                alert_msg('服务器内部错误！',2,0);
+                            }
+
+                        }
+                    );
+                });
+            }else if (obj.event === 'cancel') {
+                layer.confirm('确定取消该培训记录吗？',{title:'提示',icon: 3}, function (index) {
+                    $.post(getRealUrl("/train/updateState.do"), {trainId: data.id, trainState: "4"},
+                        function(data) {
+                            if(data.result === 'ok'){
+                                alert_msg('取消成功！');
+                                layer.close(index);
+                                tableObj.reload();
+                            }else{
+                                alert_msg('服务器内部错误！',2,0);
+                            }
+
+                        }
+                    );
+                });
+            }else if (obj.event === 'delete') {
+                layer.confirm('确定删除该培训记录吗？',{title:'提示',icon: 3}, function (index) {
+                    $.post(getRealUrl("/train/delete.do"), {trainId: data.id},
+                        function(data) {
+                            if(data.result === 'ok'){
+                                alert_msg('删除成功！');
+                                layer.close(index);
+                                tableObj.reload();
+
+                            }else{
+                                alert_msg('服务器内部错误！',2,0);
+                            }
+
+                        }
+                    );
+                });
+            }
+            return false;
+        });
+    });
+</script>
+
+</body>
+
+</html>

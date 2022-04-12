@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>用户编辑</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layui-form layui-edit-form" id="edit-div">
+        <input type="hidden" id="id" name="id" />
+        
+        <div class="layui-row">
+            <div class="layui-col-sm4">
+                <label class="layui-form-label">手机号</label>
+                <div class="layui-input-block">
+                    <input type="text" name="userCode" id="userCode" disabled="disabled" class="layui-input" value=""/>
+                </div>
+            </div>
+
+            <div class="layui-col-sm4">
+                <label class="layui-form-label"><span class="layui-badge-required"></span>医生名称</label>
+                <div class="layui-input-block">
+                    <input type="text" name="userRealName" id="userRealName" class="layui-input" lay-verify="required" lay-reqtext="医生名称不能为空" value=""/>
+                </div>
+            </div>
+
+            <div class="layui-col-sm4">
+                <label class="layui-form-label">医生职称</label>
+                <div class="layui-form layui-input-block" lay-filter="doctorTitle">
+                    <select name="doctorTitle" id="doctorTitle"></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-row">
+            <div class="layui-col-sm4">
+                <label class="layui-form-label">身份证号</label>
+                <div class="layui-input-block">
+                    <input type="text" name="cardNumber" id="cardNumber" class="layui-input" value=""/>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-row">
+            <div class="layui-col-sm4">
+                <label class="layui-form-label"></label>
+                <div class="layui-input-block">
+                    <button type="submit" class="layui-btn" lay-submit="" lay-filter="saveBtn">保存</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+    <script src="../../js/app.js" charset="utf-8"></script>
+    <script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+    <script>
+        layui.use(['form'], function() {
+            var form = layui.form;
+            var layer = layui.layer;
+            var $ = layui.$;
+
+            // 从浏览器缓存中获取界面之间的传值，获取后删除
+            var userObj = global_getLocalStorage("org-user-list#userObject") || {};
+            global_removeLocalStorage("org-user-list#userObject");
+            ajaxGetDict("doctor_title");
+            var userId = userObj.id;
+            
+            if(userObj){
+            	$('#id').val(userId);
+            	$('#userRealName').val(userObj.user_real_name);
+            	$('#userCode').val(userObj.user_code);
+            	$('#cardNumber').val(userObj.card_number);
+                if (userObj.doctor_title) {
+                    $("#doctorTitle").find("option[value=" + userObj.doctor_title + "]").prop("selected", true);
+                }
+
+            	form.render();
+            }
+
+            function ajaxGetDict (param) {
+                var url = "/dict/dictList.do?paramCategory="+param;
+                return new Promise(function (resolve, reject) {
+                    $.ajax({
+                        url: getRealUrl(url),
+                        type: 'GET',
+                        async: false,
+                        success: function (res) {
+                            for (var obj of res.data) {
+                                $('#doctorTitle').append(new Option(obj.paramValue, obj.paramValue));
+                            }
+                            layui.form.render("select","doctorTitle");
+                            resolve(res);
+                        },
+                        error: function(err) {
+                            reject('请求失败');
+                        }
+                    })
+                })
+            };
+
+            //监听提交
+            var isLoading = false
+            form.on('submit(saveBtn)', function(data) {
+            	if(!isLoading){
+		            isLoading = true
+                    
+                    $.ajax({
+                        url: getRealUrl("/sys/saveUser.do"),
+                        type: "POST",
+                        contentType: "application/json; charset=utf-8",
+                        data: JSON.stringify(data.field),
+                        success: function(data) {
+                            isLoading = false
+                            if (data.result == 'ok') {
+                                var iframeIndex = parent.layer.getFrameIndex(window.name);
+                                parent.layer.close(iframeIndex);
+                                parent.layui.table.reload('currentTableId');
+                                parent.alert_msg('操作成功！');
+                                
+                            } else if(data.result == '310') {
+                            	alert_msg('该账户已经被注册，请更换手机号！', 2, 0);
+
+                            } else {
+                                alert_msg('服务器内部错误！', 2, 0);
+                            }
+
+                        },
+                        error: function () {
+                            isLoading = false
+                        }
+                    });
+                }
+            });
+
+        });
+    </script>
+</body>
+
+</html>

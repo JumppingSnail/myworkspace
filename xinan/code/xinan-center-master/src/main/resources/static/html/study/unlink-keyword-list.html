@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>添加关键字列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <!-- 查询区域 -->
+        <fieldset class="table-search-fieldset">
+            <div>
+                <form class="layui-form" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                        <label class="layui-form-label">关键词</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="keywordSearch" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+
+                        <div class="layui-inline">
+                            <button class="layui-btn" lay-submit lay-filter="data-search-btn">
+                                <img src="../../image/search.png" alt="">
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+        
+    <div style="margin: 0 20px;">
+        <input type="hidden" id="sourceId" name="sourced" />
+        <input type="hidden" id="sourceTbname" name="sourceTbname" />
+        
+        <script type="text/html" id="toolbarDemo">
+                <div class="layui-btn-container">
+                    <button class="layui-btn" lay-event="saveBtn"><i class="layui-icon">&#xe63c;</i>确定 </button>
+                </div>
+        </script>
+        <table class="layui-hide" id="roleTableId" lay-filter="roleTableFilter"></table>
+    </div>
+</div>   
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+
+    layui.use(['form','table'], function() {
+        var form = layui.form;
+        var table = layui.table;
+        var $ = layui.$;
+        
+        var keywordObj = global_getLocalStorage("unlink-keyword-list#Object") || {};
+        global_removeLocalStorage("unlink-keyword-list#Object");
+        
+        var sourceId = keywordObj.id;
+        var sourceTbname = keywordObj.sourceTbname;
+        
+        $('#sourceId').val(sourceId);
+        $('#sourceTbname').val(sourceTbname);
+
+        var tableObj = table.render({
+            elem : '#roleTableId',
+            url: getRealUrl('/study/unlinkedKeywordList.do'),
+            where: {
+            	sourceId: sourceId,
+            },
+            toolbar: '#toolbarDemo',
+            method: 'get',
+            defaultToolbar: [],
+            even: true,
+            cols : [[
+                {type:'checkbox'},
+                {field:'keyword_name',title: '关键词'},
+            ]],
+            limits: [20, 50, 100],
+            limit: 20,
+            page: true,
+            height: 'full-115'
+        });
+        
+     // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            //执行搜索重载
+            table.reload('roleTableId', {
+                page: {
+                    curr: 1
+                },
+                where: {
+                    keywordSearch : data.field.keywordSearch,
+                }
+            });
+
+            return false;
+        });
+
+        table.on('toolbar(roleTableFilter)', function (obj) {
+            if (obj.event === 'saveBtn') {  
+                var data = table.checkStatus('roleTableId').data;
+                var jsonData = {
+                    'sourceId': sourceId,
+                    'sourceTbname': sourceTbname,
+                    'keywordIdList': []
+                };
+
+                for(var i=0; i<data.length; i++){
+                    jsonData['keywordIdList'].push(data[i].id);
+                }
+
+                if(jsonData['keywordIdList'].length==0){
+                    alert_msg('请先选择列表中的关键词再提交请求！', 2, 0);
+                    return false;
+                }
+                
+                $.ajax({
+                    url : getRealUrl("/study/saveKeywordRel.do"),
+                    type : "POST",
+                    contentType : "application/json; charset=utf-8",
+                    data : JSON.stringify(jsonData),
+                    success : function(data) {
+                        if(data.result == 'ok'){
+                            var iframeIndex = parent.layer.getFrameIndex(window.name);
+                            parent.layer.close(iframeIndex);
+                            parent.layui.table.reload('currentTableId');
+                            parent.alert_msg('保存成功！');
+                        }else{
+                            alert_msg('服务器内部错误！',2,0);
+                        }
+
+                    }
+                });
+            }
+        });
+
+    });
+</script>
+</body>
+</html>

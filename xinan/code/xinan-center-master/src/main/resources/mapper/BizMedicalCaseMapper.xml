@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.metamedical.mapper.BizMedicalCaseMapper">
+
+    <select id="selectMedicalCaseList" resultType="java.util.HashMap">
+        select
+
+        medical_case.id,
+        medical_case.case_description, -- 主诉
+        medical_case.patient_name,
+        medical_case.patient_age,
+        medical_case.patient_sex,
+        medical_case.repos_id, -- 出处ID
+        medical_case.section_id, -- 章节ID
+        repos.repos_title,
+        bcd.id as cd_id,
+        repos_rel.repos_title as cn_disease, -- 中医诊断
+        section.section_name
+
+        from biz_medical_case medical_case
+        left join biz_case_disease bcd on medical_case.id = bcd.case_id
+        left join biz_knowledge repos_rel on bcd.repos_id = repos_rel.id
+        left join biz_knowledge repos on medical_case.repos_id = repos.id
+        left join biz_knowledge_content section on medical_case.section_id = section.id
+        where 1 = 1
+
+        <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(cnDisease)">
+            AND repos_rel.repos_title LIKE #{cnDisease}
+        </if>
+
+        order by medical_case.create_time desc
+
+    </select>
+
+    <select id="selectObjById" resultType="java.util.HashMap">
+        select
+            medical_case.id,
+            medical_case.case_description, -- 主诉
+            medical_case.patient_name,
+            medical_case.patient_age,
+            medical_case.patient_sex,
+            repos.cat_id, -- 文章类型id
+            medical_case.repos_id, -- 出处ID
+            medical_case.section_id, -- 章节ID
+            repos.repos_title,
+            section.section_name
+
+        from biz_medical_case medical_case
+        left join biz_knowledge repos on medical_case.repos_id = repos.id
+        left join biz_knowledge_content section on medical_case.section_id =  section.id
+        where medical_case.id = #{id}
+    </select>
+
+    <select id="getDiseaseCount" resultType="java.util.HashMap">
+        select
+
+        bmc.id,
+        bmc.patient_name,
+        bmc.patient_age,
+        bmc.patient_sex,
+        bk.repos_title
+
+        from biz_medical_case bmc
+        left join biz_case_disease bcd on bmc.id = bcd.case_id
+        left join biz_knowledge bk on bcd.repos_id = bk.id
+        where 1 = 1
+        <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(diseaseName)">
+            and bk.repos_title = #{diseaseName}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(sex)">
+            and bmc.patient_sex = #{sex}
+        </if>
+
+    </select>
+
+    <select id="getMedicalCaseCountList" resultType="java.util.HashMap">
+        select
+
+        bk.repos_title,
+        count(bk.repos_title) as total_count
+
+        from biz_medical_case bmc
+        left join biz_case_disease bcd on bmc.id = bcd.case_id
+        left join biz_knowledge bk on bcd.repos_id = bk.id
+        where 1 = 1
+        <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(diseaseName)">
+            and bk.repos_title like #{diseaseName}
+        </if>
+        group by bk.repos_title
+        order by total_count desc
+
+    </select>
+
+    <select id="getTreatmentCountList" resultType="java.util.HashMap">
+
+        select
+
+            bk2.repos_title,
+            bk2.repos_url,
+            count(bk2.repos_title) as total_count
+
+        from
+            biz_case_disease bcd
+
+        join biz_knowledge bk on bcd.repos_id = bk.id
+        join biz_case_treatment bct on bct.case_disease_id = bcd.id
+        join base_knowledge_catagory bkc on bkc.id = bk.cat_id
+        join biz_knowledge bk2 on bct.treat_name = bk2.repos_title
+        where bkc.cat_name = '疾病' and bk.repos_title = #{diseaseName}
+
+        group by bk2.repos_title, bk2.repos_url
+        order by total_count
+
+    </select>
+
+    <select id="getTreatmentDrugsCountList" resultType="java.util.HashMap">
+        select
+
+            drug_bk.repos_title,
+            drug_bk.repos_url,
+--             drug_bk.id,
+            count(drug_bk.repos_title) as total_count
+
+        from biz_case_disease bcd
+        join biz_knowledge bk on bcd.repos_id = bk.id
+        join biz_case_treatment bct on bct.case_disease_id = bcd.id
+        join base_knowledge_catagory bkc on bkc.id = bk.cat_id
+        join biz_case_doseage doseage on doseage.doseage_id = bct.id
+        join biz_knowledge drug_bk on doseage.drug_id = drug_bk.id
+
+        where bkc.cat_name = '疾病' and bk.repos_title = #{diseaseName}
+
+--         group by drug_bk.repos_title, drug_bk.id
+        group by drug_bk.repos_title, drug_bk.repos_url
+        order by total_count desc
+    </select>
+
+    <select id="selectMedicalCaseListByPhone" resultType="java.util.HashMap">
+        SELECT
+            tmp.ID,
+            concat_ws(' | ',tmp.patient_name, CASE tmp.patient_sex WHEN '0' THEN '男' WHEN '1' THEN '女' ELSE '未知' END, tmp.patient_age) as repos_title, '医案' as cat_name,
+            tmp.patient_name,
+            '医案' as cat_name, -- 类型 医案表
+            tmp.patient_sex,
+            tmp.patient_age,
+            tmp.create_time,
+            concat_ws('', '中医诊断：', tmp.cn_disease) as repos_digest
+        FROM
+            (
+                SELECT
+                    bmc.ID,
+                    bmc.patient_name,
+                    bmc.patient_sex,
+                    bmc.patient_age,
+                    bmc.create_time,
+                (
+                SELECT
+                    string_agg ( bk.repos_title || '', ',' )
+                FROM
+                    biz_knowledge bk
+                    JOIN biz_case_disease bcd ON bk.ID = bcd.repos_id
+                WHERE
+                    bcd.case_id = bmc.ID
+            ) AS cn_disease
+        FROM
+        biz_medical_case bmc
+        ) tmp
+        where 1 = 1
+        <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(cnDisease)">
+            AND tmp.cn_disease like #{cnDisease}
+        </if>
+
+        order by tmp.create_time desc
+
+    </select>
+
+
+</mapper>

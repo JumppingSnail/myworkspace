@@ -1,0 +1,248 @@
+body,html{
+    height: 100%;
+}
+.content{
+    width: 100%;
+    min-height: 100%;
+    background: #F6F9FC;
+}
+.layui-card-header{
+    color: #000;
+    border-color: #E6ECFC;
+    font-size: 16px;
+}
+.layui-col-md8{
+    padding-right: 10px;
+}
+.content-center-box{
+    background: #eff7f8;
+    padding-left: 10px;
+}
+.content-center-box>div{
+    height: 291px;
+}
+
+.layui-card{
+    border-radius: 5px;
+}
+
+.kjfs ul{
+    margin: 0 21px;
+    clear: both;
+    overflow: hidden;
+    padding-bottom: 32px;
+}
+.kjfs ul li{
+    float:left;
+    width: 33.3%;
+    text-align: center;
+    padding-top: 27px;
+    cursor: pointer;
+}
+.kjfs ul li p{
+    color: #333;
+    font-size: 14px;
+    margin-top: 14px;
+    margin-bottom: 6px;
+}
+
+.dbsx-boby-box{
+    margin: 0 18px;
+    overflow: hidden;
+    clear: both;
+}
+.dbsx-boby-box div{
+    width: 33%;
+    padding-top: 45px;
+    padding-bottom: 15px;
+    text-align: center;
+    float: left;
+    position: relative;
+}
+.dbsx-boby-box div p:nth-child(1){
+    font-size: 32px;
+    /*color: #4266EE;*/
+}
+.dbsx-boby-box div p:nth-child(2){
+    font-size: 14px;
+    color: #333;
+    margin-top: 16px;
+}
+.dbsx-boby-box div p:nth-child(3){
+    background: #f0f4ff;
+    position: absolute;
+    width: 100px;
+    height: 1px;
+    display: none;
+}
+.left-top-border{
+    bottom:0;
+    right:0;
+    width: 1px!important;
+    height: 100px!important;
+}
+.rigth-top-border{
+    bottom:-1px;
+    left:0;
+}
+.left-bottom-border{
+    top:0;
+    right:0;
+}
+.right-bottom-border{
+    top:0;
+    left:-1px;
+    width: 1px!important;
+    height: 100px!important;
+}
+.layui-text h3{
+    color: #333;
+    font-size: 18px;
+    font-weight: normal;
+}
+.layui-timeline-axis{
+    background-color: #d8d8d8;
+    color: #d8d8d8;
+}
+.layui-timeline-content{
+    color: #7F7F7F;
+}
+
+.ypcggl-box{
+    margin: 10px 0;
+}
+.layui-timeline-item{
+    /*padding-bottom: 30px!important;*/
+}
+.tj-title{
+    color: #333;
+    font-size: 14px;
+    text-align: center;
+}
+.layui-carousel{
+    max-height: 230px;
+}
+.layui-btn{
+    background: none;
+    height: auto;
+    line-height: normal;
+    margin-left: 0px!important;
+}
+.layui-timeline-axis:hover {
+    color: #d8d8d8;
+}
+.layui-layer-title {    
+    /*background: #91dade!important;*/
+    background: #F2F5FB!important;
+}
+.layui-table-hover{
+    background: #f3feff!important;
+}
+.layui-row{
+    margin-top:20px;
+}
+.layui-row:nth-child(1){
+    margin-top:0;
+}
+.layui-container{
+    padding:20px;
+    padding-top:0;
+}
+.layui-col-md3{
+    margin-right: 20px;
+    margin-top: 20px;
+    height: 330px;
+    width: calc(25% - 20px);
+    min-width: 340px;
+}
+.layui-col-md3:last-child{
+    margin-right: 0;
+}
+/*.kjfs{*/
+/*    width: calc(27% - 20px);*/
+/*    min-width: 432px;*/
+/*}*/
+/*.dbsx{*/
+/*    width: calc(27% - 20px);*/
+/*    min-width: 426px;*/
+/*}*/
+/*.gsdt{*/
+/*    width: calc(24% - 20px);*/
+/*    min-width: 386px;*/
+/*}*/
+/*.gg{*/
+/*    width: calc(22% - 20px);*/
+/*    min-width: 356px;*/
+/*}*/
+.layui-card-body{
+    height: 275px;
+    padding: 0;
+}
+.layui-card-header{
+    height: 54px;
+    line-height: 54px;
+    color: #000;
+    font-size: 16px;
+    padding: 0;
+    margin:0 15px;
+    font-weight: 600;
+}
+#test1{
+    margin: 0 20px 14px!important;
+    height: 240px!important;
+    width: auto!important;
+    padding-top: 14px!important;
+    background: #fff;
+}
+#test1 img{
+    width: auto;
+    height: 142px;
+}
+.gsdt .layui-card-body p{
+    margin:10px 0;
+    line-height: 28px;
+    font-size: 14px;
+    text-align: left;
+}
+.gg-body-box{
+    margin: 30px!important;
+    height: 245px;
+}
+.gg-body-box ul li p{
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.layui-table-view,.layui-table td,.layui-table th{
+    border-width: 0;
+}
+.layui-table-view .layui-table th{
+    padding:16px 0;
+    color: #828D9C;
+    font-size: 14px;
+    background: #F2F5FB;
+}
+.layui-table-view .layui-table td{
+    padding:16px 0;
+    color: #666;
+    font-size: 14px;
+}
+.layui-table-header {
+    border-width: 0 0 0;
+}
+.layui-table[lay-even] tr:nth-child(even) {
+    background: #F9FAFC;
+}
+.sjgl{
+    height: 369px!important;
+}
+.ddtj{
+    height: 409px!important;
+}
+.gsdt .layui-card-body p{
+    height: 90px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+}

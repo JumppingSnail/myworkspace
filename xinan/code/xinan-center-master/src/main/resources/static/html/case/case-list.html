@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>医案列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <!-- 查询区域 -->
+        <fieldset class="table-search-fieldset">
+            <div>
+                <form class="layui-form" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">中医诊断</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="cnDisease" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <!--<div class="layui-inline">
+                            <label class="layui-form-label">方剂</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="userNameSearch" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>-->
+
+                        <div class="layui-inline">
+                            <button class="layui-btn" lay-submit lay-filter="data-search-btn">
+                                <img src="../../image/search.png" alt="">
+                            </button>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+        <!-- 查询区域 -->
+
+        <!-- 列表区域 -->
+        <div style="margin: 0 20px;">
+            <script type="text/html" id="toolbarDemo">
+                <div class="layui-btn-container">
+                    <button class="layui-btn layui-btn data-add-btn" lay-event="add"><i class="layui-icon">&#xe654;</i>新增
+                    </button>
+                </div>
+            </script>
+
+            <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+            <script type="text/html" id="num_down">
+                {{d.LAY_TABLE_INDEX+1}}
+            </script>
+            <script type="text/html" id="currentTableBar">
+
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-save" lay-event="details">详情</a>
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-save" lay-event="addPreRecord">添加处方</a>
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-save" lay-event="edit">修改</a>
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-save" lay-event="remove">删除</a>
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="keyword">关键词</a>
+
+            </script>
+        </div>
+
+    </div>
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        var table = layui.table;
+
+        var currentUser = global_getLocalStorage("xinan#currentUser");
+        var userId = currentUser.userId;
+
+        var tableObj = table.render({
+            elem: '#currentTableId',
+            url: getRealUrl('/bizMedicalCase/getMedicalCaseList.do'),
+            toolbar: '#toolbarDemo',
+            method: 'get',
+            defaultToolbar: [],
+            even: true,
+            cols: [[
+                {field: 'num', title: '序号', width: 60, align: 'center', templet: '#num_down', fixed: 'left'},
+                {field: 'cn_disease', title: '中医诊断'},
+                {field: 'case_description', title: '主诉'},
+                {field: 'patient_name', width: 180, title: '姓名'},
+                {
+                    field: 'patient_sex',  width: 120, title: '性别',
+                    templet: function (d) {
+                        if (d.patient_sex === '0') {
+                            return '男';
+                        } else if (d.patient_sex === '1') {
+                            return '女';
+                        } else if (d.patient_sex === '2') {
+                            return '未知';
+                        }
+                        return "";
+                    }
+
+                },
+                {field: 'patient_age',  width: 120, title: '年龄'},
+                {field: 'repos_title', title: '出处'},
+                {field: 'section_name', title: '章节'},
+                {title: '操作', width: 380, toolbar: '#currentTableBar', align: "center", fixed: 'right'}
+
+            ]],
+            limits: [20, 50, 100],
+            limit: 20,
+            page: true,
+            height: 'full-107'
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            //执行搜索重载
+            table.reload('currentTableId', {
+                page: {
+                    curr: 1
+                },
+                where: {
+                    cnDisease: data.field.cnDisease
+                }
+            });
+
+            return false;
+        });
+
+        // toolbar监听事件
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            if (obj.event === 'add') {  // 监听添加操作
+                var index = layer.open({
+                    title: '添加医案',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['75%', '90%'],
+                    content: 'case-edit.html',
+                });
+            }
+        });
+
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'edit') {
+                global_setLocalStorage("case-list-edit#objId", data.id)
+                var index = layer.open({
+                    title: '修改医案信息',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['95%', '95%'],
+                    content: 'case-edit.html'
+                });
+            }else if (obj.event === 'addPreRecord') {
+                global_setLocalStorage("case-list-addPreRecord#obj", data)
+                var index = layer.open({
+                    title: '添加处方',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['95%', '95%'],
+                    content: 'add-case-pre-record.html'
+                });
+            }else if (obj.event === 'details') {
+                global_setLocalStorage("case-list-details#obj", data)
+                var index = layer.open({
+                    title: '处方详情',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['95%', '95%'],
+                    content: 'case-details.html'
+                });
+            }else if (obj.event === 'remove') {
+                layer.confirm('确定删除医案中医诊断吗？',{title:'提示',icon: 3}, function (index) {
+                    $.post(getRealUrl("/bizMedicalCase/deleteMedicalCase.do"), {cdId: data.cd_id, id: data.id},
+                        function(data) {
+                            if(data.result === 'ok'){
+                                alert_msg('删除成功！');
+                                layer.close(index);
+                                tableObj.reload();
+                            }else{
+                                alert_msg('服务器内部错误！',2,0);
+                            }
+
+                        }
+                    );
+                });
+                
+            } else if (obj.event === 'keyword') {
+                var keywordObj = {
+                    id: data.id,
+                    sourceTbname: "biz_medical_case",
+                    patient_name: data.patient_name,
+                    cn_disease: data.cn_disease,
+                };
+                global_setLocalStorage("link_keyword#Object", keywordObj);
+                
+                var index = layer.open({
+                    title: '关键词',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['75%', '90%'],
+                    content: '../study/link-keyword-list.html',
+                    success: function (layer, index) {
+
+                    },
+                });
+            }
+        });
+
+
+    });
+</script>
+
+</body>
+</html>

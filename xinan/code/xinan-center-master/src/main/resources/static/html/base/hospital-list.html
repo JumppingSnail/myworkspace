@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>医院列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <!-- 查询区域 -->
+        <fieldset class="table-search-fieldset">
+            <div>
+                <form class="layui-form" action="">
+                    <div class="layui-form-item">
+
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+        <!-- 查询区域 -->
+        <div style="margin: 0 20px;">
+            <!-- 列表区域 -->
+            <script type="text/html" id="toolbarDemo">
+                <div class="layui-btn-container">
+                    <button class="layui-btn data-add-btn" lay-event="addnew"> <i class="layui-icon">&#xe654;</i>新增医院 </button>
+                </div>
+            </script>
+
+            <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+            <script type="text/html" id="num_down">
+                {{d.LAY_TABLE_INDEX+1}}
+            </script>
+            <script type="text/html" id="currentTableBar">
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="modify">修改</a>
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="doctors">医生管理</a>
+            </script>
+        </div>
+
+    </div>
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function() {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table;
+
+        var tableObj = table.render({
+            elem: '#currentTableId',
+            url: getRealUrl('/org/list.do'),
+            toolbar: '#toolbarDemo',
+            method: 'get',
+            defaultToolbar: [],
+            even: true,
+            cols: [
+                [{
+                    field: 'num',
+                    title: '序号',
+                    width: 60,
+                    align: 'center',
+                    templet: '#num_down',
+                    fixed: 'left'
+                }, {
+                    field: 'org_name',
+                    title: '医院名称',
+                    align: 'center'
+                }, {
+                    field: 'org_simple_name',
+                    title: '医院简介',
+                    align: 'center'
+                }, {
+                    field: 'org_address',
+                    title: '医院地址',
+                    align: 'center',
+                    width: 300,
+                },{
+                    title: '操作',
+                    width: 150,
+                    toolbar: '#currentTableBar',
+                    align: "center",
+                    fixed: 'right'
+                }]
+            ],
+            limits: [20, 50, 100],
+            limit: 20,
+            page: true,
+            height: 'full-105'
+        });
+
+        // toolbar监听事件
+        table.on('toolbar(currentTableFilter)', function(obj) {
+            if (obj.event === 'addnew') { // 监听添加操作
+                var index = layer.open({
+                    title: '添加医院',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['75%', '75%'],
+                    content: 'hospital-edit.html',
+                });
+            }
+        });
+
+        table.on('tool(currentTableFilter)', function(obj) {
+            var data = obj.data;
+            if (obj.event === 'modify') {
+                global_setLocalStorage("hospital-edit#mapObject", data);
+
+                var index = layer.open({
+                    title: '编辑指标分类',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['75%', '75%'],
+                    content: 'hospital-edit.html'
+                });
+
+            }else if (obj.event === 'doctors') {
+                global_setLocalStorage("org-doctor-list#mapObject", data);
+
+                var index = layer.open({
+                    title: '医生列表',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['90%', '90%'],
+                    content: 'org-doctor-list.html'
+                });
+
+            }
+            return false;
+        });
+    });
+</script>
+
+</body>
+
+</html>

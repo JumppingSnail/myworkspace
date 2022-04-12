@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.metamedical.mapper.BizFeedbackMapper">
+	<select id="feedbackList" resultType="java.util.HashMap">
+		SELECT bf.*, bk.repos_title, bkc.section_name 
+		
+		  FROM biz_feedback bf 
+			JOIN biz_knowledge bk ON bf.repos_id=bk.id 
+			LEFT JOIN biz_knowledge_content bkc ON bf.section_id=bkc.id 
+			
+		  WHERE 1=1
+		  
+		  	<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(content)">
+		  		AND bf.feedback_content LIKE #{content}
+		  	</if>
+		  	
+		  	<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(state)">
+		  		AND bf.deal_state=#{state}
+		  	</if>
+
+		 ORDER BY bf.feedback_time DESC 
+	</select>
+</mapper>

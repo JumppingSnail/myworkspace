@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>医案统计</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+<style>
+    .table-search-fieldset .layui-form-label {
+        width: 70px !important;
+        padding: 0 !important;
+        padding-right: 20px !important;
+        min-width: auto;
+    }
+
+    .top-box {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    .top-box div {
+        width: calc(25% - 10px);
+        /*min-width: 540px;*/
+        height: 100px;
+        background: #FFFFFF;
+        box-shadow: 0px 1px 8px 0px rgba(0, 0, 0, 0.08);
+        border-radius: 6px;
+    }
+
+    .top-num {
+        text-align: center;
+        font-size: 44px;
+        font-weight: bold;
+        color: #7FB1F5;
+        margin-bottom: 0;
+        margin-top: 15px;
+    }
+
+    .top-info {
+        text-align: center;
+        font-size: 14px;
+        font-weight: 400;
+        color: #333333;
+    }
+
+    .layuimini-container {
+        margin-top: 20px;
+    }
+</style>
+
+<body>
+<div class="top-box">
+    <div class="top-left">
+        <p class="top-num"><span id="total_case"></span></p>
+        <p class="top-info">全部医案</p>
+    </div>
+    <div class="top-right">
+        <p class="top-num"><span id="total_men"></span></p>
+        <p class="top-info">男</p>
+    </div>
+    <div class="top-left">
+        <p class="top-num"><span id="total_women"></span></p>
+        <p class="top-info">女</p>
+    </div>
+    <div class="top-right">
+        <p class="top-num"><span id="total_other"></span></p>
+        <p class="top-info">未知</p>
+    </div>
+
+</div>
+
+<div class="layuimini-container">
+<!--    <div class="layuimini-main">-->
+        <!-- 查询区域 -->
+        <fieldset class="table-search-fieldset">
+            <div>
+                <form class="layui-form" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">疾病名称</label>
+                            <div class="layui-input-block">
+                                <input type="text" class="layui-input" id="diseaseName" name="diseaseName" />
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">患者性别</label>
+                            <div class="layui-input-block">
+                                <select name="patientSex" id="patientSex" class="layui-input">
+                                    <option value="">全部</option>
+                                    <option value="0">男</option>
+                                    <option value="1">女</option>
+                                    <option value="2">未知</option>
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <div class="layui-inline">
+                            <button class="layui-btn" lay-submit lay-filter="data-search-btn">
+                                <img src="../../image/search.png" alt="">
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+        <div id="main" style="width: auto;height:350px; margin: 0 auto"></div>
+
+<!--    </div>-->
+</div>
+
+<div class="layuimini-container">
+<!--    <div class="layuimini-main">-->
+        <!-- 查询区域 -->
+        <!-- 查询区域 -->
+        <fieldset class="table-search-fieldset">
+            <div>
+                <form class="layui-form" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">疾病名称</label>
+                            <div class="layui-input-block">
+                                <input type="text" class="layui-input" id="diseaseNameSearch" name="diseaseNameSearch" />
+                            </div>
+                        </div>
+
+                        <div class="layui-inline">
+                            <button class="layui-btn" lay-submit lay-filter="data-search-btn-select">
+                                <img src="../../image/search.png" alt="">
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+        <!-- 查询区域 -->
+        <div style="margin: 20px 20px;">
+            <!-- 列表区域 -->
+            <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+            <script type="text/html" id="num_down">
+                {{d.LAY_TABLE_INDEX+1}}
+            </script>
+            <script type="text/html" id="currentTableBar">
+
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-save" lay-event="view">查看</a>
+
+            </script>
+        </div>
+
+<!--    </div>-->
+</div>
+
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/moment.min.js"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script src="../../dss/js/echarts.min.js" charset="UTF-8"></script>
+<script>
+    layui.use(['laydate', 'form', 'table'], function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        var table = layui.table;
+        var laydate = layui.laydate;
+
+        //顶部数据
+        $.get(getRealUrl('/bizMedicalCase/getCaseInfoCount.do'),
+            function (result, status, xhr) {
+                let resultData = result.data;
+                if (result.result === 'ok' && resultData) {
+                    $("#total_case").html(resultData.totalCount)
+                    $("#total_men").html(resultData.menCount)
+                    $("#total_women").html(resultData.womenCount)
+                    $("#total_other").html(resultData.otherCount)
+                }
+            }
+        )
+
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('main'));
+
+        //饼图
+        $.get(getRealUrl('/bizMedicalCase/getDiseaseCount.do'),
+            // {"diseaseName": '', "sex": ''},
+            function (result, status, xhr) {
+                var data = result.data;
+                var total = result.total;
+
+                let arrData = [];
+                for (let dd of data) {
+                    arrData.push({"name": dd.name, "value": (dd.value / total).toFixed(2)});
+                }
+
+                myChart.setOption({
+                    tooltip: {
+                        trigger: 'item'
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        show: true,
+                        top: '15%',
+                        left: '60%'
+                    },
+                    series: [{
+                        type: 'pie',
+                        name: '疾病（例）',
+                        radius: '70%',
+                        data: arrData
+                    }],
+                    emphasis: {
+                        label: {
+                            show: true,
+                            // fontSize: '40',
+                            fontWeight: 'bold'
+                        }
+                    },
+                    labelLine: {
+                        show: true
+                    },
+                    itemStyle:{
+                        normal:{
+                            label:{
+                                color: 'black',
+                                show:true,
+                                position: 'outsize',
+                                formatter: '{b}\n{d}%'
+                            }
+                        }
+                    },
+                    label: {
+                        formatter: '{b}\n{d}%',
+                    }
+                });
+
+            }
+        )
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            //执行搜索重载
+            //饼图
+            $.get(getRealUrl('/bizMedicalCase/getDiseaseCount.do'),
+                {"diseaseName": data.field.diseaseName, "sex": data.field.patientSex},
+                function (result, status, xhr) {
+                    var data = result.data;
+                    var total = result.total;
+
+                    let arrData = [];
+                    if (total === 0) total = 1;
+
+                    for (let dd of data) {
+                        arrData.push({"name": dd.name, "value": (dd.value / total).toFixed(2)});
+                    }
+
+                    myChart.setOption({
+                        tooltip: {
+                            trigger: 'item'
+                        },
+                        legend: {
+                            orient: 'vertical',
+                            show: true,
+                            top: '15%',
+                            left: '60%'
+                        },
+                        series: [{
+                            type: 'pie',
+                            name: '疾病（例）',
+                            radius: '70%',
+                            data: arrData
+                        }],
+                        emphasis: {
+                            label: {
+                                show: true,
+                                // fontSize: '40',
+                                fontWeight: 'bold'
+                            }
+                        },
+                        labelLine: {
+                            show: true
+                        },
+                        itemStyle:{
+                            normal:{
+                                label:{
+                                    color: 'black',
+                                    show:true,
+                                    position: 'outsize',
+                                    formatter: '{b}\n{d}%'
+                                }
+                            }
+                        },
+                        label: {
+                            formatter: '{b}\n{d}%',
+                        }
+                    });
+
+                }
+            )
+
+            return false;
+        });
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn-select)', function (data) {
+            //执行搜索重载
+            table.reload('currentTableId', {
+                page: {
+                    curr: 1
+                },
+                where: {
+                    diseaseName: data.field.diseaseNameSearch
+                }
+            });
+
+            return false;
+        });
+
+        //列表数据
+        var tableObj = table.render({
+            elem: '#currentTableId',
+            id: 'currentTableId',
+            url: getRealUrl('/bizMedicalCase/getMedicalCaseCountList.do'),
+            // toolbar: '#toolbarDemo',
+            method: 'get',
+            defaultToolbar: [],
+            even: true,
+            cols: [[
+                {field: 'num', title: '序号', width: 80, align: 'center', templet: '#num_down', fixed: 'left'},
+                {field: 'repos_title', align: 'center', title: '诊断结果'},
+                {field: 'total_count', align: 'center', title: '累计次数'},
+                {title: '操作', width: 380, toolbar: '#currentTableBar', align: "center", fixed: 'right'}
+
+            ]],
+            limits: [20, 50, 100],
+            limit: 20,
+            page: true,
+            height: '450'
+        });
+
+        table.on('tool(currentTableFilter)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'view') {
+                global_setLocalStorage("summary-disease-details#dataObj", data)
+                var index = layer.open({
+                    title: '用药治疗排行',
+                    type: 2,
+                    // maxmin: true,
+                    // shadeClose: true,
+                    shade: 0.2,
+                    area: ['99%', '99%'],
+                    content: 'disease-details.html'
+                });
+                //layer.full(index);
+            }
+        });
+
+
+    });
+
+
+</script>
+
+</body>
+
+</html>

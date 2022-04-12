@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.metamedical.mapper.BizCaseDiseaseMapper">
+
+    <select id="selectMapByCaseId" resultType="java.util.HashMap">
+        select
+
+            disease.id,
+            disease.case_id,
+            disease.repos_id,
+            repos_rel.repos_title
+
+        from biz_case_disease disease
+        left join biz_knowledge repos_rel on disease.repos_id = repos_rel.id
+        where case_id = #{caseId}
+        order by disease.id
+    </select>
+
+    <select id="queryTreatmentDrugs" resultType="java.util.HashMap">
+        select
+
+            bcd.id,
+            bcd.case_id,
+            bcd.drug_id,
+            bcd.drug_usage,
+            bcd.drug_sort,
+            bk.repos_title,
+            bkc.cat_name
+
+        from biz_case_doseage bcd
+        left join biz_knowledge bk on bcd.drug_id = bk.id
+        left join base_knowledge_catagory bkc on bk.cat_id = bkc.id
+        where bcd.doseage_id = #{doseageId}
+
+        <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(catName)">
+            and bkc.cat_name = #{catName}
+        </if>
+        order by bcd.drug_sort
+
+    </select>
+
+</mapper>

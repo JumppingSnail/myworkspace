@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>知识库管理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <!-- 查询区域 -->
+        <fieldset class="table-search-fieldset">
+            <div>
+                <form class="layui-form" action="">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">标题</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="reposTitle" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">栏目</label>
+                            <div class="layui-form layui-input-block" lay-filter="catId">
+                                <select name="catId" id="catId">
+                                    <option value="">全部</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">状态</label>
+                            <div class="layui-input-inline">
+                                <select name="reposState" class="layui-input">
+                                    <option value="">全部</option>
+                                    <option value="1">已上架</option>
+                                    <option value="2">已下架</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="layui-inline">
+                            <button class="layui-btn" lay-submit lay-filter="data-search-btn">
+                                <img src="../../image/search.png" alt="">
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </fieldset>
+        <!-- 查询区域 -->
+        <div style="margin: 0 20px;">
+            <!-- 列表区域 -->
+            <script type="text/html" id="toolbarDemo">
+                <div class="layui-btn-container">
+                    <button class="layui-btn data-add-btn" lay-event="addnew"> <i class="layui-icon">&#xe654;</i>新增 </button>
+                </div>
+            </script>
+
+            <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+            <script type="text/html" id="num_down">
+                {{d.LAY_TABLE_INDEX+1}}
+            </script>
+            <script type="text/html" id="currentTableBar">
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="modify">编辑</a>
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="log">日志</a>
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="link">链接</a>
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="keyword">关键词</a>
+            </script>
+        </div>
+
+    </div>
+</div>
+
+<script src="../../lib/jquery-3.4.1/jquery-3.4.1.min.js" charset="utf-8"></script>
+<script src="../../js/app.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['form', 'table'], function() {
+        var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table;
+
+        var tableObj = table.render({
+            elem: '#currentTableId',
+            url: getRealUrl('/repos/reposList.do'),
+            toolbar: '#toolbarDemo',
+            method: 'get',
+            defaultToolbar: [],
+            even: true,
+            cols: [
+                [{
+                    field: 'num',
+                    title: '序号',
+                    width: 60,
+                    align: 'center',
+                    templet: '#num_down',
+                    fixed: 'left'
+                }, {
+                    field: 'repos_title',
+                    title: '标题',
+                    align: 'center'
+                }, {
+                    field: 'cat_name',
+                    title: '栏目',
+                    align: 'center',
+                    width: 120,
+                }, {
+                    field: 'create_user_name',
+                    title: '创建人',
+                    align: 'center',
+                    width: 120,
+                }, {
+                    field: 'repos_state',
+                    title: '状态',
+                    align: "center",
+                    width: 120,
+                    templet: function (d) {
+                        if (d.repos_state === '0'){
+                            return "已下架"
+                        }else if (d.repos_state === '1'){
+                            return "已上架"
+                        }
+                        return '';
+                    }
+                }, {
+                    field: 'create_time',
+                    title: '创建时间',
+                    align: 'center',
+                    templet: function(d){
+                        if (d.create_time){
+                            return d.create_time.substring(0, 19).replace("T", ' ');
+                        }
+                        return '';
+                    }
+                }, {
+                    field: 'update_time',
+                    title: '更新时间',
+                    align: 'center',
+                    templet: function(d){
+                        if (d.update_time){
+                            return d.update_time.substring(0, 19).replace("T", ' ');
+                        }
+                        return '';
+                    }
+                }, {
+                    field: 'commend_flag',
+                    title: '推荐到首页',
+                    align: 'center',
+                    width: 100,
+                    templet: function (d) {
+                        if (d.commend_flag === '0'){
+                            return "未推荐"
+                        }else if (d.commend_flag === '1'){
+                            return "已推荐"
+                        }
+                        return '';
+                    }
+                },{
+                    title: '操作',
+                    width: 300,
+                    toolbar: '#currentTableBar',
+                    align: "center",
+                    fixed: 'right',
+                    templet: function(d) {
+                        return d;
+                    }
+                }]
+            ],
+            limits: [20, 50, 100],
+            limit: 20,
+            page: true,
+            where: {
+                onlyUserFlag: "1"
+            },
+            height: 'full-105'
+        });
+
+        ajaxGetCatList()
+
+        function ajaxGetCatList (param) {
+            var url = "/repos/catagorylist.do?limit="+100
+            return new Promise(function (resolve, reject) {
+                $.ajax({
+                    url: getRealUrl(url),
+                    type: 'GET',
+                    async: false,
+                    success: function (res) {
+                        for (var obj of res.data) {
+                        	if(obj.cat_name=='病案'){
+                                continue;
+                            }
+                            $('#catId').append(new Option(obj.cat_name, obj.id));
+                        }
+                        layui.form.render("select","catId");
+                        resolve(res);
+                    },
+                    error: function(err) {
+                        reject('请求失败');
+                    }
+                })
+            })
+        };
+
+
+
+        // 监听搜索操作
+        form.on('submit(data-search-btn)', function (data) {
+            //执行搜索重载
+            table.reload('currentTableId', {
+                page: {
+                    curr: 1
+                },
+                where: {
+                    reposTitleSearch : data.field.reposTitle,
+                    reposStateSearch : data.field.reposState,
+                    catId : data.field.catId
+                }
+            });
+
+            return false;
+        });
+
+        // toolbar监听事件
+        table.on('toolbar(currentTableFilter)', function(obj) {
+            if (obj.event === 'addnew') { // 监听添加操作
+                var index = layer.open({
+                    title: '新增知识库',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['75%', '90%'],
+                    content: 'repository-add-new.html',
+                });
+            }
+        });
+
+        table.on('tool(currentTableFilter)', function(obj) {
+            var data = obj.data;
+            if (obj.event === 'link') {
+                global_setLocalStorage("repository-link-copy#mapObject", data);
+
+                var index = layer.open({
+                    title: '链接',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['70%', '50%'],
+                    content: 'repository-link-copy.html'
+                });
+
+            } else if (obj.event === 'log') {
+                global_setLocalStorage("repository-change-log#mapObject", data);
+
+                var index = layer.open({
+                    title: '日志信息',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['90%', '90%'],
+                    content: 'repository-change-log.html'
+                });
+
+            } else if (obj.event === 'modify') {
+                global_setLocalStorage("repository-edit#mapObject", data);
+
+                var index = layer.open({
+                    title: '编辑信息',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['95%', '95%'],
+                    content: 'repository-edit.html'
+                });
+
+            }else if (obj.event === 'show'){
+                layer.confirm('确定上架该知识库吗？',{title:'提示',icon: 3}, function (index) {
+                    $.post(getRealUrl("/repos/startRepos.do"), {id: data.id},
+                        function(data) {
+                            if(data.result === 'ok'){
+                                alert_msg('上架成功！');
+                                layer.close(index);
+                                tableObj.reload();
+                            }else{
+                                alert_msg('服务器内部错误！',2,0);
+                            }
+
+                        }
+                    );
+                });
+            }else if (obj.event === 'hide'){
+                layer.confirm('确定下架该知识库吗？',{title:'提示',icon: 3}, function (index) {
+                    $.post(getRealUrl("/repos/stopRepos.do"), {id: data.id},
+                        function(data) {
+                            if(data.result === 'ok'){
+                                alert_msg('上架成功！');
+                                layer.close(index);
+                                tableObj.reload();
+                            }else{
+                                alert_msg('服务器内部错误！',2,0);
+                            }
+
+                        }
+                    );
+                });
+            }else if (obj.event === 'commendRepos'){
+                layer.confirm('确定置为首页推荐吗？',{title:'提示',icon: 3}, function (index) {
+                    $.post(getRealUrl("/repos/commendRepos.do"), {id: data.id},
+                        function(data) {
+                            if(data.result === 'ok'){
+                                alert_msg('上架成功！');
+                                layer.close(index);
+                                tableObj.reload();
+                            }else{
+                                alert_msg('服务器内部错误！',2,0);
+                            }
+
+                        }
+                    );
+                });
+            }else if (obj.event === 'uncommendRepos'){
+                layer.confirm('确定取消首页推荐吗？',{title:'提示',icon: 3}, function (index) {
+                    $.post(getRealUrl("/repos/uncommendRepos.do"), {id: data.id},
+                        function(data) {
+                            if(data.result === 'ok'){
+                                alert_msg('上架成功！');
+                                layer.close(index);
+                                tableObj.reload();
+                            }else{
+                                alert_msg('服务器内部错误！',2,0);
+                            }
+
+                        }
+                    );
+                });
+            
+            } else if (obj.event === 'keyword') {
+                var keywordObj = {
+                    id: data.id,
+                    sourceTbname: "biz_knowledge",
+                    repos_title: data.repos_title,
+                    cat_name: data.cat_name,
+                };
+                global_setLocalStorage("link_keyword#Object", keywordObj);
+                
+                var index = layer.open({
+                    title: '关键词',
+                    type: 2,
+                    shade: 0.2,
+                    area: ['75%', '90%'],
+                    content: '../study/link-keyword-list.html',
+                    success: function (layer, index) {
+
+                    },
+                });
+                
+                
+            }
+            return false;
+        });
+
+    });
+</script>
+
+</body>
+
+</html>
